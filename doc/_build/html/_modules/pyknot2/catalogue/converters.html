@@ -1,0 +1,407 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.catalogue.converters &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.catalogue.converters</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.catalogue.converters</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;Functions for converting between representations, e.g. from sympy</span>
+<span class="sd">polynomials to the json lists stored in the database models.  &#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sym</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">n</span>    
+<span class="kn">import</span> <span class="nn">json</span>
+
+<span class="c">## 1) Conversion from database to sympy</span>
+
+<div class="viewcode-block" id="sympify_alexander"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.sympify_alexander">[docs]</a><span class="k">def</span> <span class="nf">sympify_alexander</span><span class="p">(</span><span class="n">coeffs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes an Alexander polynomial as a list of coefficients, and</span>
+<span class="sd">    returns a sympy polynomial representation.&#39;&#39;&#39;</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+    <span class="n">index</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">coeff</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">t</span><span class="o">**</span><span class="n">index</span>
+        <span class="n">index</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="sympify_jones"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.sympify_jones">[docs]</a><span class="k">def</span> <span class="nf">sympify_jones</span><span class="p">(</span><span class="n">coeffs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a Jones polynomial as a list of (coefficient, index) tuples,</span>
+<span class="sd">    and returns a sympy polynomial representation.&#39;&#39;&#39;</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">index</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">coeff</span><span class="o">*</span><span class="n">q</span><span class="o">**</span><span class="n">index</span>
+    <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="sympify_homfly"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.sympify_homfly">[docs]</a><span class="k">def</span> <span class="nf">sympify_homfly</span><span class="p">(</span><span class="n">coeffs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a HOMFLY polynomial as a list of (coefficient, a_index,</span>
+<span class="sd">    z_index) tuples, and returns a sympy polynomial representation.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">coeff</span><span class="p">,</span> <span class="n">a_index</span><span class="p">,</span> <span class="n">z_index</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">result</span> <span class="o">+=</span> <span class="n">coeff</span> <span class="o">*</span> <span class="n">a</span><span class="o">**</span><span class="n">a_index</span> <span class="o">*</span> <span class="n">z</span><span class="o">**</span><span class="n">z_index</span>
+    <span class="k">return</span> <span class="n">result</span>
+</div>
+<div class="viewcode-block" id="json_to_alexander"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.json_to_alexander">[docs]</a><span class="k">def</span> <span class="nf">json_to_alexander</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes an Alexander polynomial json serialisation and returns the</span>
+<span class="sd">    sympy polynomial.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">sympify_alexander</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="json_to_jones"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.json_to_jones">[docs]</a><span class="k">def</span> <span class="nf">json_to_jones</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes an Jones polynomial json serialisation and returns the</span>
+<span class="sd">    sympy polynomial.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">sympify_jones</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="json_to_homfly"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.json_to_homfly">[docs]</a><span class="k">def</span> <span class="nf">json_to_homfly</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a HOMFLY polynomial json serialisation and returns the</span>
+<span class="sd">    sympy polynomial.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">sympify_homfly</span><span class="p">(</span><span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+    
+
+<span class="c">## 2) Conversion from sympy to database json</span>
+</div>
+<div class="viewcode-block" id="desympify_alexander"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.desympify_alexander">[docs]</a><span class="k">def</span> <span class="nf">desympify_alexander</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes a sympy Alexander polynomial p, and returns a tuple of</span>
+<span class="sd">    coefficients in order.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">as_terms</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">),</span><span class="mi">2</span><span class="p">),</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)):</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])]</span>
+    <span class="k">if</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">]</span> <span class="o">&lt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="n">coeffs</span><span class="p">[:,</span><span class="mi">0</span><span class="p">]</span> <span class="o">*=</span> <span class="o">-</span><span class="mi">1</span>
+
+    <span class="n">cmin</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">cmax</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">cs</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">zeros</span><span class="p">(</span><span class="n">cmax</span><span class="o">-</span><span class="n">cmin</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span><span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">cs</span><span class="p">[</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cmin</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="nb">map</span><span class="p">(</span><span class="nb">int</span><span class="p">,</span><span class="n">cs</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="desympify_jones"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.desympify_jones">[docs]</a><span class="k">def</span> <span class="nf">desympify_jones</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes a sympy Jones polynomial p, and returns a tuple of</span>
+<span class="sd">    (coefficient, index) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">as_terms</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">),</span> <span class="mi">2</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)):</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">argsort</span><span class="p">(</span><span class="n">coeffs</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])]</span>
+    <span class="c"># if coeffs[0][0] &lt; 0:</span>
+    <span class="c">#     coeffs[:, 0] *= -1</span>
+
+    <span class="n">cmin</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">cmax</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">cs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">cs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">])))</span>
+        <span class="c"># Need int to convert from numpy.int64</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="desympify_homfly"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.desympify_homfly">[docs]</a><span class="k">def</span> <span class="nf">desympify_homfly</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&quot;&quot;&quot;Takes a sympy HOMFLY polynomial p, and returns a tuple of</span>
+<span class="sd">    (coefficient, index_a, index_z) tuples.</span>
+<span class="sd">    &quot;&quot;&quot;</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="n">terms</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">as_terms</span><span class="p">()[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">),</span> <span class="mi">3</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">int</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">terms</span><span class="p">)):</span>
+        <span class="n">entry</span> <span class="o">=</span> <span class="n">terms</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">coeffs</span><span class="p">[</span><span class="n">i</span><span class="p">,</span><span class="mi">2</span><span class="p">]</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">][</span><span class="mi">1</span><span class="p">])</span>
+
+    <span class="n">inds</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">lexsort</span><span class="p">((</span><span class="n">coeffs</span><span class="p">[:,</span><span class="mi">2</span><span class="p">],</span> <span class="n">coeffs</span><span class="p">[:,</span><span class="mi">1</span><span class="p">]))</span>
+    <span class="n">coeffs</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="n">inds</span><span class="p">]</span>
+
+    <span class="n">cmin</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+    <span class="n">cmax</span> <span class="o">=</span> <span class="n">coeffs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">]</span>
+
+    <span class="n">cs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">coeffs</span><span class="p">:</span>
+        <span class="n">cs</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]),</span> <span class="nb">int</span><span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">2</span><span class="p">])))</span>
+        <span class="c"># Need int to convert from numpy.int64</span>
+
+    <span class="k">return</span> <span class="nb">tuple</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="alexander_to_json"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.alexander_to_json">[docs]</a><span class="k">def</span> <span class="nf">alexander_to_json</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes an Alexander polynomial, and returns a json serialised list</span>
+<span class="sd">    of its coefficients.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">desympify_alexander</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="jones_to_json"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.jones_to_json">[docs]</a><span class="k">def</span> <span class="nf">jones_to_json</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a Jones polynomial, and returns a json serialised list</span>
+<span class="sd">    of its coefficients.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">desympify_jones</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="homfly_to_json"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.homfly_to_json">[docs]</a><span class="k">def</span> <span class="nf">homfly_to_json</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a HOMFLY polynomial, and returns a json serialised list of</span>
+<span class="sd">    its coefficients.&#39;&#39;&#39;</span>
+    <span class="k">return</span> <span class="n">json</span><span class="o">.</span><span class="n">dumps</span><span class="p">(</span><span class="n">desympify_homfly</span><span class="p">(</span><span class="n">p</span><span class="p">))</span>
+
+<span class="c">## 3) Conversion from rdf to sympy</span>
+</div>
+<div class="viewcode-block" id="rdf_poly_to_sympy"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.rdf_poly_to_sympy">[docs]</a><span class="k">def</span> <span class="nf">rdf_poly_to_sympy</span><span class="p">(</span><span class="n">p</span><span class="p">,</span> <span class="nb">vars</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Converts polynomials as stored in knot atlas rdf data to sympy</span>
+<span class="sd">    objects. The process is *very* crude (trim off &lt;math&gt; xml, replace</span>
+<span class="sd">    characters with python equivalents), but seems to suffice for the</span>
+<span class="sd">    data currently harvested. </span>
+
+<span class="sd">    vars should be a list of variables in the polynomial</span>
+<span class="sd">    (e.g. [&#39;t&#39;,&#39;q&#39;]). Appropriate sympy variables are constructed to</span>
+<span class="sd">    represent these.</span>
+
+<span class="sd">    The conversion is done using eval and exec, so you should be *very</span>
+<span class="sd">    sure* that your rdf doesn&#39;t contain malicious code!</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;math&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;/math&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">strip</span><span class="p">()</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;{&#39;</span><span class="p">,</span> <span class="s">&#39;(&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;}&#39;</span><span class="p">,</span> <span class="s">&#39;)&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;^&#39;</span><span class="p">,</span> <span class="s">&#39;**&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; + &#39;</span><span class="p">,</span><span class="s">&#39;+&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; +&#39;</span><span class="p">,</span><span class="s">&#39;+&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;+ &#39;</span><span class="p">,</span><span class="s">&#39;+&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; - &#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; -&#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;- &#39;</span><span class="p">,</span><span class="s">&#39;-&#39;</span><span class="p">)</span>
+    <span class="n">p</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39; &#39;</span><span class="p">,</span><span class="s">&#39;*&#39;</span><span class="p">)</span>
+
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="nb">vars</span><span class="p">:</span>
+        <span class="k">exec</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">((</span><span class="n">entry</span><span class="p">,</span> <span class="s">&#39; = sym.var(</span><span class="se">\&#39;</span><span class="s">&#39;</span><span class="p">,</span> <span class="n">entry</span><span class="p">,</span> <span class="s">&#39;</span><span class="se">\&#39;</span><span class="s">)&#39;</span><span class="p">)))</span>
+
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+
+<span class="c">## 4) User interface convenience functions (standard names)</span>
+</div>
+<div class="viewcode-block" id="db2py_alexander"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.db2py_alexander">[docs]</a><span class="k">def</span> <span class="nf">db2py_alexander</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">json_to_alexander</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="py2db_alexander"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.py2db_alexander">[docs]</a><span class="k">def</span> <span class="nf">py2db_alexander</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">alexander_to_json</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="db2py_jones"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.db2py_jones">[docs]</a><span class="k">def</span> <span class="nf">db2py_jones</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">json_to_jones</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="py2db_jones"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.py2db_jones">[docs]</a><span class="k">def</span> <span class="nf">py2db_jones</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">jones_to_json</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="db2py_homfly"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.db2py_homfly">[docs]</a><span class="k">def</span> <span class="nf">db2py_homfly</span><span class="p">(</span><span class="n">s</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">json_to_homfly</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="py2db_homfly"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.py2db_homfly">[docs]</a><span class="k">def</span> <span class="nf">py2db_homfly</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">homfly_to_json</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>
+
+<span class="c">## 5) Converters between invariants</span>
+</div>
+<div class="viewcode-block" id="homfly_to_jones"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.homfly_to_jones">[docs]</a><span class="k">def</span> <span class="nf">homfly_to_jones</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a homfly polynomial p, and returns the Jones polynomial</span>
+<span class="sd">    through variable substitution.&#39;&#39;&#39;</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">z</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;z&#39;</span><span class="p">)</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+
+    <span class="n">np</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">q</span><span class="p">)</span>
+    <span class="n">np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">z</span><span class="p">,</span> <span class="n">sym</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">q</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="o">/</span><span class="n">sym</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">q</span><span class="p">))</span>
+    <span class="n">np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span>
+</div>
+<div class="viewcode-block" id="homfly_other_chirality"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.homfly_other_chirality">[docs]</a><span class="k">def</span> <span class="nf">homfly_other_chirality</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a homfly polynomial p, and replaces a with 1/a to give the</span>
+<span class="sd">    polynomial of the same knot with opposite chirality.&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">a</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;a&#39;</span><span class="p">)</span>
+    <span class="n">np</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">a</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">a</span><span class="p">)</span>
+    <span class="n">np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span>
+</div>
+<div class="viewcode-block" id="jones_other_chirality"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.converters.jones_other_chirality">[docs]</a><span class="k">def</span> <span class="nf">jones_other_chirality</span><span class="p">(</span><span class="n">p</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a jones polynomial p, and replaces q with 1/q to give the</span>
+<span class="sd">    polynomial of the same knot with opposite chirality.&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="n">p</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+    <span class="n">np</span> <span class="o">=</span> <span class="n">p</span><span class="o">.</span><span class="n">subs</span><span class="p">(</span><span class="n">q</span><span class="p">,</span> <span class="mi">1</span><span class="o">/</span><span class="n">q</span><span class="p">)</span>
+    <span class="n">np</span> <span class="o">=</span> <span class="n">np</span><span class="o">.</span><span class="n">expand</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">np</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

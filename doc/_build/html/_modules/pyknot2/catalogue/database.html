@@ -1,0 +1,287 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.catalogue.database &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.catalogue.database</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.catalogue.database</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Model classes and associated functions for storing and accessing</span>
+<span class="sd">knots in an sqlite database.</span>
+
+<span class="sd">These models use the peewee ORM. Other ORMs are not currently supported!</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">peewee</span> <span class="kn">import</span> <span class="o">*</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">os</span>
+<span class="kn">import</span> <span class="nn">converters</span>
+
+<span class="n">directory</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">dirname</span><span class="p">(</span><span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">realpath</span><span class="p">(</span><span class="n">__file__</span><span class="p">))</span> <span class="o">+</span> <span class="s">&#39;/knots.db&#39;</span>
+<span class="n">DB_LOCATION</span> <span class="o">=</span> <span class="n">directory</span>
+<span class="c"># The location of the database to work with.</span>
+
+<span class="n">db</span> <span class="o">=</span> <span class="n">SqliteDatabase</span><span class="p">(</span><span class="n">DB_LOCATION</span><span class="p">)</span>
+<span class="n">db</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="BaseModel"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.database.BaseModel">[docs]</a><span class="k">class</span> <span class="nc">BaseModel</span><span class="p">(</span><span class="n">Model</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">Meta</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+        <span class="n">database</span> <span class="o">=</span> <span class="n">db</span>
+
+</div>
+<div class="viewcode-block" id="Knot"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.database.Knot">[docs]</a><span class="k">class</span> <span class="nc">Knot</span><span class="p">(</span><span class="n">BaseModel</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Peewee model for storing a knot in a database.&#39;&#39;&#39;</span>
+
+    <span class="n">name</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;The actual name (if any), e.g. trefoil&#39;&#39;&#39;</span>
+
+    <span class="n">identifier</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;The standard knot notation, e.g. 3_1 for trefoil&#39;&#39;&#39;</span>
+
+    <span class="n">min_crossings</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Minimal crossing number for the knot, e.g. 3 for trefoil&#39;&#39;&#39;</span>
+
+    <span class="n">signature</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;The knot signature&#39;&#39;&#39;</span>
+
+    <span class="n">determinant</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;The knot determinant (Alexander polynomial at -1)&#39;&#39;&#39;</span>
+
+    <span class="n">alexander_imag_3</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;The absolute value of the Alexander polynomial at</span>
+<span class="sd">    exp(2 pi I / 3). This will always be an integer.&#39;&#39;&#39;</span>
+
+    <span class="n">alexander_imag_4</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;The absolute value of the Alexander polynomial at</span>
+<span class="sd">    exp(2 pi I / 4) == I. This will always be an integer.&#39;&#39;&#39;</span>
+
+    <span class="n">alexander</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Alexander polynomial, stored as a json list of coefficients from</span>
+<span class="sd">    lowest to highest index, including zeros if there are any jumps in</span>
+<span class="sd">    index.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">jones</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Jones polynomial, stored as a json list of coefficients and indices</span>
+<span class="sd">    for each monomial.&#39;&#39;&#39;</span>
+
+    <span class="n">homfly</span> <span class="o">=</span> <span class="n">TextField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;HOMFLY-PT polynomial, stored as a json list.&#39;&#39;&#39;</span>
+
+    <span class="n">unknotting_number</span> <span class="o">=</span> <span class="n">IntegerField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Unknotting number, stored as an integer.&#39;&#39;&#39;</span>
+
+    <span class="n">hyperbolic_volume</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Hyperbolic volume, stored as a string to avoid precision</span>
+<span class="sd">    problems.&#39;&#39;&#39;</span>
+
+    <span class="n">conway_notation</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Conway notation, as a string.&#39;&#39;&#39;</span>
+
+    <span class="n">gauss_code</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Gauss code, as a string.&#39;&#39;&#39;</span>
+
+    <span class="n">planar_diagram</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Planar diagram representation, as a string.&#39;&#39;&#39;</span>
+
+    <span class="n">dt_code</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Dowker-Thistlethwaite code, as a string.&#39;&#39;&#39;</span>
+
+    <span class="n">two_bridge</span> <span class="o">=</span> <span class="n">CharField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Two-bridge notation, as a string.&#39;&#39;&#39;</span>
+
+    <span class="n">fibered</span> <span class="o">=</span> <span class="n">BooleanField</span><span class="p">(</span><span class="n">null</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="sd">&#39;&#39;&#39;Whether the knot is fibered or not.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__str__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">return</span> <span class="s">&#39;&lt;Knot {} ({})&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">return</span> <span class="s">&#39;&lt;Knot {}&gt;&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+
+    <span class="k">def</span> <span class="nf">__repr__</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="nb">str</span><span class="p">(</span><span class="bp">self</span><span class="p">)</span>
+
+<div class="viewcode-block" id="Knot.pprint"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.database.Knot.pprint">[docs]</a>    <span class="k">def</span> <span class="nf">pprint</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Pretty print all information contained about self.&#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Name: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">name</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Identifier: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_crossings</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Min crossings: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">min_crossings</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">fibered</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Fibered: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">fibered</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">gauss_code</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Gauss code: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">gauss_code</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">planar_diagram</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Planar diagram: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">planar_diagram</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">determinant</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Determinant: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">determinant</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Signature: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">signature</span><span class="p">)</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">alexander</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Alexander: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">converters</span><span class="o">.</span><span class="n">json_to_alexander</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">alexander</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">jones</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Jones: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">converters</span><span class="o">.</span><span class="n">json_to_jones</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">jones</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">homfly</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;HOMFLY: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span>
+                <span class="n">converters</span><span class="o">.</span><span class="n">json_to_homfly</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">homfly</span><span class="p">))</span>
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">hyperbolic_volume</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Hyperbolic voolume: {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">hyperbolic_volume</span><span class="p">)</span>
+</pre></div></div></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

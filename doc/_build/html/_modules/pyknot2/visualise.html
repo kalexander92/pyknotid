@@ -1,0 +1,280 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.visualise &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.visualise</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.visualise</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Visualise</span>
+<span class="sd">=========</span>
+
+<span class="sd">This module contains functions for plotting knots, supporting</span>
+<span class="sd">different toolkits and types of plot.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">n</span>
+
+<div class="viewcode-block" id="plot_line"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_line">[docs]</a><span class="k">def</span> <span class="nf">plot_line</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;mayavi&#39;</span><span class="p">,</span> <span class="n">clf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plots the given line, using the toolkit given by mode.  Currently,</span>
+<span class="sd">    only mayavi is supported. Future support will include vispy,</span>
+<span class="sd">    matplotlib?</span>
+
+<span class="sd">    kwargs are passed to the toolkit specific function, except for:</span>
+
+<span class="sd">    TODO: add auto toolkit selection</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    points : array-like</span>
+<span class="sd">        The nx3 array to plot.</span>
+<span class="sd">    mode : str</span>
+<span class="sd">        The toolkit to draw with. Defaults to &#39;auto&#39;, which will</span>
+<span class="sd">        automatically pick the first available toolkit from</span>
+<span class="sd">        [&#39;mayavi&#39;, &#39;matplotlib&#39;, &#39;vispy&#39;].</span>
+<span class="sd">    clf : bool</span>
+<span class="sd">        Whether the existing figure should be cleared</span>
+<span class="sd">        before drawing the new one.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+            
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;mayavi&#39;</span><span class="p">:</span>
+        <span class="n">plot_line_mayavi</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">clf</span><span class="o">=</span><span class="n">clf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;vispy&#39;</span><span class="p">:</span>
+        <span class="n">plot_line_vispy</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">clf</span><span class="o">=</span><span class="n">clf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;matplotlib&#39;</span><span class="p">:</span>
+        <span class="n">plot_line_matplotlib</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">clf</span><span class="o">=</span><span class="n">clf</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;invalid toolkit/mode&#39;</span><span class="p">)</span>
+
+    </div>
+<div class="viewcode-block" id="plot_line_mayavi"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_line_mayavi">[docs]</a><span class="k">def</span> <span class="nf">plot_line_mayavi</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">clf</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">tube_radius</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">colormap</span><span class="o">=</span><span class="s">&#39;hsv&#39;</span><span class="p">,</span>
+                     <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">mayavi.mlab</span> <span class="kn">as</span> <span class="nn">may</span>
+    <span class="k">if</span> <span class="n">clf</span><span class="p">:</span>
+        <span class="n">may</span><span class="o">.</span><span class="n">clf</span><span class="p">()</span>
+    <span class="n">mus</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">linspace</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">))</span>
+    <span class="n">may</span><span class="o">.</span><span class="n">plot3d</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">],</span> <span class="n">mus</span><span class="p">,</span>
+               <span class="n">colormap</span><span class="o">=</span><span class="n">colormap</span><span class="p">,</span> <span class="n">tube_radius</span><span class="o">=</span><span class="n">tube_radius</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="plot_line_matplotlib"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_line_matplotlib">[docs]</a><span class="k">def</span> <span class="nf">plot_line_matplotlib</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+    <span class="n">fig</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">figure</span><span class="p">()</span>
+    <span class="n">ax</span> <span class="o">=</span> <span class="n">fig</span><span class="o">.</span><span class="n">gca</span><span class="p">(</span><span class="n">projection</span><span class="o">=</span><span class="s">&#39;3d&#39;</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="plot_line_vispy"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_line_vispy">[docs]</a><span class="k">def</span> <span class="nf">plot_line_vispy</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="kn">from</span> <span class="nn">vispy</span> <span class="kn">import</span> <span class="n">app</span><span class="p">,</span> <span class="n">scene</span>
+    <span class="n">canvas</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">SceneCanvas</span><span class="p">(</span><span class="n">keys</span><span class="o">=</span><span class="s">&#39;interactive&#39;</span><span class="p">)</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">view</span> <span class="o">=</span> <span class="n">canvas</span><span class="o">.</span><span class="n">central_widget</span><span class="o">.</span><span class="n">add_view</span><span class="p">()</span>
+    <span class="n">l</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">visuals</span><span class="o">.</span><span class="n">Line</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">color</span><span class="o">=</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">),</span> <span class="n">width</span><span class="o">=</span><span class="mi">4</span><span class="p">,</span>
+                                  <span class="n">mode</span><span class="o">=</span><span class="s">&#39;gl&#39;</span><span class="p">,</span> <span class="n">antialias</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+    <span class="c">#l = scene.visuals.LinePlot(points[:, :2])</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">add</span><span class="p">(</span><span class="n">l</span><span class="p">)</span>
+    <span class="n">canvas</span><span class="o">.</span><span class="n">view</span><span class="o">.</span><span class="n">set_camera</span><span class="p">(</span><span class="s">&#39;turntable&#39;</span><span class="p">,</span> <span class="n">mode</span><span class="o">=</span><span class="s">&#39;perspective&#39;</span><span class="p">,</span>
+                           <span class="n">up</span><span class="o">=</span><span class="s">&#39;z&#39;</span><span class="p">,</span> <span class="n">distance</span><span class="o">=</span><span class="mf">1.5</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span>
+                               <span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)))</span>
+    <span class="n">l</span><span class="o">.</span><span class="n">transform</span> <span class="o">=</span> <span class="n">scene</span><span class="o">.</span><span class="n">transforms</span><span class="o">.</span><span class="n">AffineTransform</span><span class="p">()</span>
+    <span class="n">l</span><span class="o">.</span><span class="n">transform</span><span class="o">.</span><span class="n">translate</span><span class="p">(</span><span class="o">-</span><span class="mi">1</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">average</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">))</span>
+
+    <span class="n">canvas</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">canvas</span>
+    
+</div>
+<div class="viewcode-block" id="plot_projection"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_projection">[docs]</a><span class="k">def</span> <span class="nf">plot_projection</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">crossings</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">mark_start</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                    <span class="n">fig_ax</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Plot the 2d projection of the given points, with optional</span>
+<span class="sd">    markers for where the crossings are.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    points : array-like</span>
+<span class="sd">        The nxm array of points in the line, with m &gt;= 2.</span>
+<span class="sd">    crossings : array-like or None</span>
+<span class="sd">        The nx2 array of crossing positions. If None, crossings</span>
+<span class="sd">        are not plotted. Defaults to None.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">import</span> <span class="nn">matplotlib.pyplot</span> <span class="kn">as</span> <span class="nn">plt</span>
+
+    <span class="k">if</span> <span class="n">fig_ax</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">fig_ax</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span> <span class="o">=</span> <span class="n">plt</span><span class="o">.</span><span class="n">subplots</span><span class="p">()</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">points</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xticks</span><span class="p">([])</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_yticks</span><span class="p">([])</span>
+
+    <span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">points</span><span class="p">[:,</span> <span class="p">:</span><span class="mi">2</span><span class="p">],</span> <span class="n">axis</span><span class="o">=</span><span class="mi">0</span><span class="p">)</span>
+    <span class="n">dx</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">-</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10.</span>
+    <span class="n">dy</span> <span class="o">=</span> <span class="p">(</span><span class="n">ymax</span> <span class="o">-</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">10.</span>
+
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_xlim</span><span class="p">(</span><span class="n">xmin</span> <span class="o">-</span> <span class="n">dx</span><span class="p">,</span> <span class="n">xmax</span> <span class="o">+</span> <span class="n">dx</span><span class="p">)</span>
+    <span class="n">ax</span><span class="o">.</span><span class="n">set_ylim</span><span class="p">(</span><span class="n">ymin</span> <span class="o">-</span> <span class="n">dy</span><span class="p">,</span> <span class="n">ymax</span> <span class="o">+</span> <span class="n">dy</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">mark_start</span><span class="p">:</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">([</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">0</span><span class="p">]],</span> <span class="p">[</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">,</span> <span class="mi">1</span><span class="p">]],</span> <span class="n">color</span><span class="o">=</span><span class="s">&#39;blue&#39;</span><span class="p">,</span>
+                <span class="n">marker</span><span class="o">=</span><span class="s">&#39;o&#39;</span><span class="p">)</span>
+    
+    <span class="k">if</span> <span class="n">crossings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="n">crossings</span><span class="p">):</span>
+        <span class="n">crossings</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">crossings</span><span class="p">)</span>
+        <span class="n">ax</span><span class="o">.</span><span class="n">plot</span><span class="p">(</span><span class="n">crossings</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">],</span> <span class="n">crossings</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">],</span> <span class="s">&#39;ro&#39;</span><span class="p">,</span> <span class="n">alpha</span><span class="o">=</span><span class="mf">0.5</span><span class="p">)</span>
+    <span class="n">fig</span><span class="o">.</span><span class="n">show</span><span class="p">()</span>
+
+    <span class="k">return</span> <span class="n">fig</span><span class="p">,</span> <span class="n">ax</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

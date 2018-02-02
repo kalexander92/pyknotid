@@ -1,0 +1,338 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.catalogue.improve &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.catalogue.improve</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.catalogue.improve</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;Contains functions for improving an existing database by filling in</span>
+<span class="sd">invariants. Original motivation was/is to get Jones polynomials from</span>
+<span class="sd">the HOMFLY polynomials provided in the high-crossing data.&#39;&#39;&#39;</span>
+
+<span class="kn">from</span> <span class="nn">database</span> <span class="kn">import</span> <span class="n">Knot</span><span class="p">,</span> <span class="n">db</span>
+<span class="kn">from</span> <span class="nn">converters</span> <span class="kn">import</span> <span class="n">homfly_to_jones</span><span class="p">,</span> <span class="n">db2py_homfly</span><span class="p">,</span> <span class="n">py2db_jones</span>
+
+<span class="kn">import</span> <span class="nn">csv</span>
+<span class="kn">import</span> <span class="nn">json</span>
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">n</span>
+
+<div class="viewcode-block" id="jones_from_homfly"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.improve.jones_from_homfly">[docs]</a><span class="k">def</span> <span class="nf">jones_from_homfly</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Takes any knots with a homfly polynomial but lacking jones, and</span>
+<span class="sd">    computes the latter from the former.&#39;&#39;&#39;</span>
+
+    <span class="n">knots</span> <span class="o">=</span> <span class="n">Knot</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">jones</span> <span class="o">&gt;&gt;</span> <span class="bp">None</span><span class="p">)</span>
+
+    <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">knots</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_knots</span><span class="p">)</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">knot</span><span class="o">.</span><span class="n">jones</span> <span class="ow">is</span> <span class="bp">None</span> <span class="ow">and</span> <span class="n">knot</span><span class="o">.</span><span class="n">homfly</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">homfly</span> <span class="o">=</span> <span class="n">knot</span><span class="o">.</span><span class="n">homfly</span>
+            <span class="k">if</span> <span class="s">&#39;Fail&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">homfly</span><span class="p">:</span>
+                <span class="n">homfly</span> <span class="o">=</span> <span class="n">db2py_homfly</span><span class="p">(</span><span class="n">homfly</span><span class="p">)</span>
+                <span class="n">jones</span> <span class="o">=</span> <span class="n">homfly_to_jones</span><span class="p">(</span><span class="n">homfly</span><span class="p">)</span>
+                <span class="n">jones</span> <span class="o">=</span> <span class="n">py2db_jones</span><span class="p">(</span><span class="n">jones</span><span class="p">)</span>
+                <span class="n">knot</span><span class="o">.</span><span class="n">jones</span> <span class="o">=</span> <span class="n">jones</span>
+                <span class="n">output_knots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">knot</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Saving changes&#39;</span>
+            <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">output_knots</span><span class="p">:</span>
+                    <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="k">print</span> <span class="s">&#39;Saving changes&#39;</span>
+    <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">output_knots</span><span class="p">:</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+</div>
+<div class="viewcode-block" id="alexander_imags_from_alexander"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.improve.alexander_imags_from_alexander">[docs]</a><span class="k">def</span> <span class="nf">alexander_imags_from_alexander</span><span class="p">(</span><span class="n">min_crossings</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes any knots with an Alexander polynomial but lacking its values</span>
+<span class="sd">    at exp(2 pi I / 3) and exp(2 pi I / 4). It could also do the</span>
+<span class="sd">    determinant (some of the determinants in the knot atlas data are</span>
+<span class="sd">    wrong), but doesn&#39;t for now.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">knots</span> <span class="o">=</span> <span class="n">Knot</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="o">~</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">alexander</span> <span class="o">&gt;&gt;</span> <span class="bp">None</span><span class="p">))</span>
+    <span class="k">if</span> <span class="n">min_crossings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">knots</span> <span class="o">=</span> <span class="n">knots</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">min_crossings</span> <span class="o">==</span> <span class="n">min_crossings</span><span class="p">)</span>
+
+    <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">knot</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">knots</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span> <span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">output_knots</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">knot</span><span class="o">.</span><span class="n">alexander</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">array</span> <span class="o">=</span> <span class="n">json</span><span class="o">.</span><span class="n">loads</span><span class="p">(</span><span class="n">knot</span><span class="o">.</span><span class="n">alexander</span><span class="p">)</span>
+
+            <span class="n">exp_2s</span> <span class="o">=</span> <span class="p">[(</span><span class="o">-</span><span class="mf">1.</span><span class="p">)</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">))]</span>
+            <span class="n">alexander_imag_2</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
+                <span class="n">coefficient</span> <span class="o">*</span> <span class="n">exponential</span> <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">exponential</span>
+                <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">exp_2s</span><span class="p">)]))))</span>
+            
+            <span class="n">exp_3s</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">exp</span><span class="p">(</span><span class="n">i</span><span class="o">*</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">pi</span><span class="o">*</span><span class="mi">1j</span><span class="o">/</span><span class="mf">3.</span><span class="p">)</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">))]</span>
+            <span class="n">alexander_imag_3</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
+                <span class="n">coefficient</span> <span class="o">*</span> <span class="n">exponential</span> <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">exponential</span>
+                <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">exp_3s</span><span class="p">)]))))</span>
+
+            <span class="n">exp_4s</span> <span class="o">=</span> <span class="p">[(</span><span class="mf">1.j</span><span class="p">)</span><span class="o">**</span><span class="n">i</span> <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">array</span><span class="p">))]</span>
+            <span class="n">alexander_imag_4</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">round</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">sum</span><span class="p">([</span>
+                <span class="n">coefficient</span> <span class="o">*</span> <span class="n">exponential</span> <span class="k">for</span> <span class="n">coefficient</span><span class="p">,</span> <span class="n">exponential</span>
+                <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="n">array</span><span class="p">,</span> <span class="n">exp_4s</span><span class="p">)]))))</span>
+
+            <span class="n">knot</span><span class="o">.</span><span class="n">determinant</span> <span class="o">=</span> <span class="n">alexander_imag_2</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">alexander_imag_3</span> <span class="o">=</span> <span class="n">alexander_imag_3</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">alexander_imag_4</span> <span class="o">=</span> <span class="n">alexander_imag_4</span>
+            <span class="n">output_knots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">knot</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">10000</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">print</span><span class="p">(</span><span class="s">&#39;Saving changes&#39;</span><span class="p">)</span>
+            <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+                <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">output_knots</span><span class="p">:</span>
+                    <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+            <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Saving changes&#39;</span><span class="p">)</span>
+    <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">output_knots</span><span class="p">:</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+        
+            </div>
+<div class="viewcode-block" id="add_fiberedness"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.improve.add_fiberedness">[docs]</a><span class="k">def</span> <span class="nf">add_fiberedness</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Adds fiberedness information to any knots where the information is</span>
+<span class="sd">    available in knotinfo&#39;s database.&#39;&#39;&#39;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;/home/asandy/knotcatalogue/raw_data/knotinfo_data_complete.csv&#39;</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fileh</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">fileh</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">monodromy</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">158</span><span class="p">]</span>
+        <span class="n">fibered</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="k">if</span> <span class="n">monodromy</span> <span class="o">!=</span> <span class="s">&#39;Not Fibered&#39;</span><span class="p">:</span>
+            <span class="n">fibered</span> <span class="o">=</span> <span class="bp">True</span>
+
+        <span class="n">crossings</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">crossings</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">11</span><span class="p">:</span>
+            <span class="n">realname</span> <span class="o">=</span> <span class="s">&#39;K{}{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crossings</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">crossings</span><span class="p">)</span>
+            <span class="n">realname</span> <span class="o">=</span> <span class="s">&#39;{}_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span>
+        <span class="n">knots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">identifier</span><span class="o">==</span><span class="n">realname</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">knots</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Failed to find {} in db&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">realname</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">knot</span> <span class="o">=</span> <span class="n">knots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">fibered</span> <span class="o">=</span> <span class="n">fibered</span>
+            <span class="n">output_knots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">knot</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="s">&#39;Attempting to save&#39;</span>
+    <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">output_knots</span><span class="p">:</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        </div>
+<div class="viewcode-block" id="add_two_bridgeness"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.improve.add_two_bridgeness">[docs]</a><span class="k">def</span> <span class="nf">add_two_bridgeness</span><span class="p">():</span>
+    <span class="sd">&#39;&#39;&#39;Adds two-bridge information to any knots where the information is</span>
+<span class="sd">    available in knotinfo&#39;s database.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">data</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;/home/asandy/knotcatalogue/raw_data/knotinfo_data_complete.csv&#39;</span><span class="p">,</span><span class="s">&#39;r&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fileh</span><span class="p">:</span>
+        <span class="n">reader</span> <span class="o">=</span> <span class="n">csv</span><span class="o">.</span><span class="n">reader</span><span class="p">(</span><span class="n">fileh</span><span class="p">,</span> <span class="n">delimiter</span><span class="o">=</span><span class="s">&#39;,&#39;</span><span class="p">,</span> <span class="n">quotechar</span><span class="o">=</span><span class="s">&#39;&quot;&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">reader</span><span class="p">:</span>
+            <span class="n">entries</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="n">row</span><span class="p">:</span>
+                <span class="n">entries</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">column</span><span class="p">)</span>
+            <span class="n">data</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">entries</span><span class="p">)</span>
+
+    <span class="n">output_knots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">:]:</span>
+        <span class="n">name</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">twobridgenotation</span> <span class="o">=</span> <span class="n">row</span><span class="p">[</span><span class="mi">24</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">twobridgenotation</span> <span class="o">==</span> <span class="s">&#39;&#39;</span><span class="p">:</span>
+            <span class="n">twobridgenotation</span> <span class="o">=</span> <span class="bp">None</span>
+
+        <span class="n">crossings</span><span class="p">,</span> <span class="n">number</span> <span class="o">=</span> <span class="n">name</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)</span>
+        <span class="n">number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">number</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">int</span><span class="p">(</span><span class="n">crossings</span><span class="p">[:</span><span class="mi">2</span><span class="p">])</span> <span class="o">&gt;=</span> <span class="mi">11</span><span class="p">:</span>
+            <span class="n">realname</span> <span class="o">=</span> <span class="s">&#39;K{}{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crossings</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">crossings</span><span class="p">)</span>
+            <span class="n">realname</span> <span class="o">=</span> <span class="s">&#39;{}_{}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">number</span><span class="p">)</span>
+        <span class="n">knots</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">select</span><span class="p">()</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">identifier</span><span class="o">==</span><span class="n">realname</span><span class="p">))</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">knots</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="k">print</span> <span class="s">&#39;Failed to find {} in db&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">realname</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">knot</span> <span class="o">=</span> <span class="n">knots</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">two_bridge</span> <span class="o">=</span> <span class="n">twobridgenotation</span>
+            <span class="n">output_knots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">knot</span><span class="p">)</span>
+
+    <span class="k">print</span> <span class="s">&#39;Attempting to save&#39;</span>
+    <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">output_knots</span><span class="p">:</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+        
+
+    
+        </div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

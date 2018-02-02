@@ -1,0 +1,985 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.simplify.octree &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.simplify.octree</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.simplify.octree</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Octree space curve simplification</span>
+<span class="sd">=================================</span>
+
+<span class="sd">Module for simplifying lines with an octree decomposition.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">n</span>
+<span class="k">try</span><span class="p">:</span>
+    <span class="kn">from</span> <span class="nn">coctree</span> <span class="kn">import</span> <span class="p">(</span><span class="n">angle_exceeds</span> <span class="k">as</span> <span class="n">cangle_exceeds</span><span class="p">,</span>
+                         <span class="n">line_to_segments</span> <span class="k">as</span> <span class="n">cline_to_segments</span><span class="p">)</span>
+<span class="k">except</span> <span class="ne">ImportError</span><span class="p">:</span>
+    <span class="n">cangle_exceeds</span> <span class="o">=</span> <span class="bp">None</span>
+    <span class="n">cline_to_segments</span> <span class="o">=</span> <span class="bp">None</span>
+
+
+<div class="viewcode-block" id="OctreeCell"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell">[docs]</a><span class="k">class</span> <span class="nc">OctreeCell</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Stores line segments, and is capable of splitting and simplifying</span>
+<span class="sd">    them.</span>
+
+<span class="sd">    - lines must be a list of LineSegments. If your data is in another form,</span>
+<span class="sd">      consider using the from_line or from_cell_lines class methods.</span>
+<span class="sd">    - shape is the size of the cell</span>
+<span class="sd">    - depth is the current recursion depth</span>
+<span class="sd">    - state is a dictionary that stores information from the recursion tree</span>
+<span class="sd">    - min_cell is the minimum cell side length</span>
+<span class="sd">    - max_depth is the maximum recursion depth beyond which simplification is</span>
+<span class="sd">      not attempted</span>
+<span class="sd">    - top_level should be True if this OctreeCell is the first created, in which</span>
+<span class="sd">      case a LineHandle is instantiated for each segment so that it can be</span>
+<span class="sd">      reconstructed after simplification.</span>
+<span class="sd">    - handles is a list of Handles to use, if it doesn&#39;t exist and top_level</span>
+<span class="sd">      is True then one is created per segment. This *will* fail with some</span>
+<span class="sd">      input, so use the class methods for building the cell to automatically</span>
+<span class="sd">      pass the right handles.</span>
+<span class="sd">    - cut_selection is a string saying how to select the cut planes in self.</span>
+<span class="sd">      It may be &#39;regular&#39; (8 equally sized octants), &#39;uniform&#39; (values</span>
+<span class="sd">      selected from a uniform distribution in each axis), or &#39;com&#39; (values</span>
+<span class="sd">      selected to pass through the line centre of mass of the cell).</span>
+
+<span class="sd">    The Handle system is used to ensure correct behaviour (with simple code!)</span>
+<span class="sd">    even for non-continuous segments etc.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">depth</span><span class="o">=</span><span class="mi">0</span><span class="p">,</span> <span class="n">top_level</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+                 <span class="n">state</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">min_cell</span><span class="o">=</span><span class="mf">1.</span><span class="p">,</span> <span class="n">max_depth</span><span class="o">=</span><span class="mi">100</span><span class="p">,</span>
+                 <span class="n">handles</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">cut_selection</span><span class="o">=</span><span class="s">&#39;regular&#39;</span><span class="p">):</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">=</span> <span class="n">depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">shape</span> <span class="o">=</span> <span class="n">shape</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="o">=</span> <span class="n">max_depth</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">min_cell</span> <span class="o">=</span> <span class="n">min_cell</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">cut_selection</span> <span class="o">=</span> <span class="n">cut_selection</span>
+        <span class="k">if</span> <span class="n">cut_selection</span> <span class="o">==</span> <span class="s">&#39;regular&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cut_planes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_equidistant_planes</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">cut_selection</span> <span class="o">==</span> <span class="s">&#39;uniform&#39;</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">cut_planes</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_uniform_random_planes</span><span class="p">()</span>
+        <span class="k">elif</span> <span class="n">cut_selection</span> <span class="o">==</span> <span class="s">&#39;com&#39;</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;com cut selection not yet supported&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;invalid choice of cut_selection&#39;</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">state</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">state</span> <span class="o">=</span> <span class="p">{}</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">state</span> <span class="o">=</span> <span class="n">state</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">state</span><span class="o">.</span><span class="n">has_key</span><span class="p">(</span><span class="s">&#39;boundaries&#39;</span><span class="p">):</span>
+            <span class="n">state</span><span class="p">[</span><span class="s">&#39;boundaries&#39;</span><span class="p">]</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">state</span><span class="p">[</span><span class="s">&#39;boundaries&#39;</span><span class="p">]</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">boundary_lines</span><span class="p">())</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">original_segments</span> <span class="o">=</span> <span class="n">lines</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="n">lines</span>
+
+        <span class="k">if</span> <span class="n">handles</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">handles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">handles</span> <span class="o">=</span> <span class="n">handles</span>
+        <span class="k">if</span> <span class="n">top_level</span> <span class="ow">and</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">handles</span><span class="p">:</span>
+            <span class="c"># Make a Handle to keep track of each segment even when</span>
+            <span class="c"># it is replaced with multiple shorter segments</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">handles</span> <span class="o">=</span> <span class="p">[</span><span class="n">Handle</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">segment</span><span class="o">.</span><span class="n">prev</span><span class="p">)</span> <span class="k">for</span>
+                            <span class="n">segment</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span><span class="p">]</span>
+            <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="bp">self</span><span class="o">.</span><span class="n">handles</span><span class="p">:</span>
+                <span class="n">handle</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">handle</span>
+                <span class="n">handle</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">handle</span>
+
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="OctreeCell.from_single_line"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.from_single_line">[docs]</a>    <span class="k">def</span> <span class="nf">from_single_line</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">line</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns an OctreeCell created from the given line, optionally</span>
+<span class="sd">        with the given boundingbox shape. If the shape is not provided,</span>
+<span class="sd">        it is calculated from the line extents.</span>
+
+<span class="sd">        Other kwargs are passed directly to the OctreeCell.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span>
+                     <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+                     <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])]</span>
+        <span class="n">lineseg</span> <span class="o">=</span> <span class="n">LineSegment</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="mi">1</span><span class="p">)</span>
+        <span class="n">lineseg</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">lineseg</span>
+        <span class="n">lineseg</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">lineseg</span>
+
+        <span class="k">return</span> <span class="n">cls</span><span class="p">([</span><span class="n">lineseg</span><span class="p">],</span> <span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="OctreeCell.from_lines"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.from_lines">[docs]</a>    <span class="k">def</span> <span class="nf">from_lines</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns an OctreeCell created from the given lines, optionally</span>
+<span class="sd">        with the given boundingbox shape. If the shape is not provided,</span>
+<span class="sd">        it is calculated from the maximum line extents.</span>
+
+<span class="sd">        Other kwargs are passed directly to the OctreeCell.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="k">if</span> <span class="n">shape</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">extremes</span> <span class="o">=</span> <span class="p">[[</span><span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span>
+                         <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+                         <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">])]</span> <span class="k">for</span>
+                         <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+            <span class="n">extremes</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">extremes</span><span class="p">)</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">[</span><span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">extremes</span><span class="p">[:,</span> <span class="mi">0</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">extremes</span><span class="p">[:,</span> <span class="mi">1</span><span class="p">]),</span>
+                     <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">extremes</span><span class="p">[:,</span> <span class="mi">2</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">extremes</span><span class="p">[:,</span> <span class="mi">3</span><span class="p">]),</span>
+                     <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">extremes</span><span class="p">[:,</span> <span class="mi">4</span><span class="p">]),</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">extremes</span><span class="p">[:,</span> <span class="mi">5</span><span class="p">])]</span>
+        <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">line</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">lines</span><span class="p">):</span>
+            <span class="n">lineseg</span> <span class="o">=</span> <span class="n">LineSegment</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="n">lineseg</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">lineseg</span>
+            <span class="n">lineseg</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">lineseg</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">lineseg</span><span class="p">)</span>
+
+        <span class="c"># import ipdb</span>
+        <span class="c"># ipdb.set_trace()</span>
+
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+            
+
+</div>
+    <span class="nd">@classmethod</span>
+<div class="viewcode-block" id="OctreeCell.from_cell_lines"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.from_cell_lines">[docs]</a>    <span class="k">def</span> <span class="nf">from_cell_lines</span><span class="p">(</span><span class="n">cls</span><span class="p">,</span> <span class="n">lines</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns an OctreeCell created from the given list of lines,</span>
+<span class="sd">        which are assumed to be periodic.</span>
+
+<span class="sd">        The shape may be all 6 values (xmin, xmax, ymin, ymax, zmin, zmax)</span>
+<span class="sd">        or just xmax, ymax, zmax with the assumption that the minima are</span>
+<span class="sd">        all zero.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span> <span class="o">==</span> <span class="mi">3</span><span class="p">:</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="mi">0</span><span class="p">,</span> <span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+        <span class="n">short_shape</span> <span class="o">=</span> <span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">::</span><span class="mi">2</span><span class="p">]</span>
+        
+        <span class="n">line_segs</span> <span class="o">=</span> <span class="p">[</span>
+            <span class="n">split_cell_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="p">[</span><span class="n">s</span> <span class="o">-</span> <span class="mf">10.</span> <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">short_shape</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">line</span> <span class="ow">in</span> <span class="n">lines</span><span class="p">]</span>
+        <span class="n">all_joined_segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">handles</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">identifier</span><span class="p">,</span> <span class="n">segments</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">line_segs</span><span class="p">):</span>
+            <span class="n">segments</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span><span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="nb">len</span><span class="p">(</span><span class="n">j</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">,</span> <span class="n">segments</span><span class="p">)</span>
+            <span class="n">seg_classes</span> <span class="o">=</span> <span class="p">[</span><span class="n">LineSegment</span><span class="p">(</span><span class="n">seg</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+                           <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
+            <span class="n">handle</span> <span class="o">=</span> <span class="n">Handle</span><span class="p">(</span><span class="n">seg_classes</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seg_class</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">seg_classes</span><span class="p">):</span>
+                <span class="n">nex</span> <span class="o">=</span> <span class="n">seg_classes</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">seg_classes</span><span class="p">)]</span>
+                <span class="c"># The CellJumpSegments isn&#39;t in self.segments, so it</span>
+                <span class="c"># won&#39;t be simplified</span>
+                <span class="n">jump_segment</span> <span class="o">=</span> <span class="n">CellJumpSegment</span><span class="p">(</span>  
+                    <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">seg_class</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">],</span> <span class="n">nex</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">])))</span>
+                <span class="n">seg_class</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">jump_segment</span>
+                <span class="n">nex</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">jump_segment</span>
+                <span class="n">jump_segment</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">seg_class</span>
+                <span class="n">jump_segment</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">nex</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">handle</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">prev</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">handle</span>
+            <span class="n">handle</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">handle</span>
+            <span class="n">handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+
+            <span class="n">all_joined_segments</span><span class="o">.</span><span class="n">extend</span><span class="p">(</span><span class="n">seg_classes</span><span class="p">)</span>
+
+        <span class="k">return</span> <span class="n">cls</span><span class="p">(</span><span class="n">all_joined_segments</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="n">handles</span><span class="o">=</span><span class="n">handles</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="OctreeCell.simplify"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.simplify">[docs]</a>    <span class="k">def</span> <span class="nf">simplify</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obey_knotting</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Performs a suitable action depending on the segments in the cell:</span>
+<span class="sd">        - if 1 segment, checks the total angle and reduces to a straight</span>
+<span class="sd">          line if it is less than 3.8pi (4pi is needed for a knot)</span>
+
+<span class="sd">        - otherwise, does the octant simplification if the cell min size</span>
+<span class="sd">          and recursion depth have both not been hit</span>
+
+<span class="sd">        The `obey_knotting` parameter may be False to ignore self-entangling</span>
+<span class="sd">        of lines, i.e. a single line may just pass through itself so no</span>
+<span class="sd">        angle check is necessary.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span>
+        <span class="n">do_octants</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">shape</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">size</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_cell_size</span><span class="p">()</span>
+
+        <span class="c"># Do something reasonable if there are two segments that include</span>
+        <span class="c"># the line start point</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">:</span>
+            <span class="n">s1</span><span class="p">,</span> <span class="n">s2</span> <span class="o">=</span> <span class="n">segments</span>
+            <span class="k">if</span> <span class="n">s1</span><span class="o">.</span><span class="n">next</span> <span class="o">==</span> <span class="n">s2</span><span class="o">.</span><span class="n">prev</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s1</span><span class="o">.</span><span class="n">next</span><span class="p">,</span> <span class="n">Handle</span><span class="p">):</span>
+                    <span class="n">handle</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">next</span>
+                    <span class="n">points</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">s1</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">s2</span><span class="o">.</span><span class="n">points</span><span class="p">))</span>
+                    <span class="n">new_segment</span> <span class="o">=</span> <span class="n">LineSegment</span><span class="p">(</span><span class="n">points</span><span class="p">,</span>
+                                              <span class="n">identifier</span><span class="o">=</span><span class="n">s1</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">prev</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">handle</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">new_segment</span>
+                    <span class="n">new_segment</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">handle</span>
+                    <span class="n">new_segment</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">s2</span><span class="o">.</span><span class="n">next</span>
+                    <span class="n">new_segment</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">new_segment</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="n">segments</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_segment</span><span class="p">]</span>
+            <span class="k">elif</span> <span class="n">s2</span><span class="o">.</span><span class="n">next</span> <span class="o">==</span> <span class="n">s1</span><span class="o">.</span><span class="n">prev</span><span class="p">:</span>
+                <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">s2</span><span class="o">.</span><span class="n">next</span><span class="p">,</span> <span class="n">Handle</span><span class="p">):</span>
+                    <span class="n">handle</span> <span class="o">=</span> <span class="n">s2</span><span class="o">.</span><span class="n">next</span>
+                    <span class="n">points</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">s2</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="n">s1</span><span class="o">.</span><span class="n">points</span><span class="p">))</span>
+                    <span class="n">new_segment</span> <span class="o">=</span> <span class="n">LineSegment</span><span class="p">(</span><span class="n">points</span><span class="p">,</span>
+                                              <span class="n">identifier</span><span class="o">=</span><span class="n">s2</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">s2</span><span class="o">.</span><span class="n">prev</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">handle</span>
+                    <span class="n">handle</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">new_segment</span>
+                    <span class="n">new_segment</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">handle</span>
+                    <span class="n">new_segment</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">s1</span><span class="o">.</span><span class="n">next</span>
+                    <span class="n">new_segment</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">new_segment</span>
+                    <span class="bp">self</span><span class="o">.</span><span class="n">segments</span> <span class="o">=</span> <span class="n">segments</span> <span class="o">=</span> <span class="p">[</span><span class="n">new_segment</span><span class="p">]</span>
+
+        <span class="c"># First, immediately simplify if not following topology</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span> <span class="ow">or</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span> <span class="o">&gt;=</span> <span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span> <span class="ow">or</span>
+            <span class="nb">any</span><span class="p">([</span><span class="n">span</span> <span class="o">&lt;</span> <span class="bp">self</span><span class="o">.</span><span class="n">min_cell</span> <span class="k">for</span> <span class="n">span</span> <span class="ow">in</span> <span class="n">size</span><span class="p">])):</span>
+            <span class="c"># If any of these are True, no simplification is possible</span>
+            <span class="k">return</span>
+
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">obey_knotting</span><span class="p">:</span>
+            <span class="n">identifiers</span> <span class="o">=</span> <span class="p">[</span><span class="n">segment</span><span class="o">.</span><span class="n">identifier</span> <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">]</span>
+            <span class="k">if</span> <span class="bp">None</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">identifiers</span> <span class="ow">and</span> <span class="nb">len</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">identifiers</span><span class="p">))</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+                <span class="k">for</span> <span class="n">segment</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+                    <span class="n">segment</span><span class="o">.</span><span class="n">replace_with_straight_line</span><span class="p">()</span>
+                <span class="k">return</span>
+
+
+        <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">segments</span><span class="p">)</span> <span class="o">==</span> <span class="mi">1</span><span class="p">:</span>
+            <span class="n">segment</span> <span class="o">=</span> <span class="n">segments</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="n">obey_knotting</span><span class="p">:</span>
+                <span class="n">segment</span><span class="o">.</span><span class="n">replace_with_straight_line</span><span class="p">()</span>
+                <span class="k">return</span>
+            <span class="k">elif</span> <span class="ow">not</span> <span class="n">angle_exceeds_func</span><span class="p">(</span><span class="n">segment</span><span class="o">.</span><span class="n">points</span><span class="p">,</span> <span class="mf">2.</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="bp">False</span><span class="p">):</span>
+                <span class="n">segment</span><span class="o">.</span><span class="n">replace_with_straight_line</span><span class="p">()</span>
+                <span class="k">return</span>  <span class="c"># No need to do more simplification if this happens</span>
+
+        <span class="c"># If we get here, the cell is too complex to simplify topologically,</span>
+        <span class="c"># but we are allowed to split into octants</span>
+                
+        <span class="bp">self</span><span class="o">.</span><span class="n">_simplify_via_octants</span><span class="p">(</span><span class="n">obey_knotting</span><span class="p">)</span>
+        </div>
+    <span class="k">def</span> <span class="nf">_simplify_via_octants</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">obey_knotting</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Splits each segment of self into sub-segments in each octant</span>
+<span class="sd">        of self, and resolves them with a new OctreeCell for each octant.&#39;&#39;&#39;</span>
+
+        <span class="n">segments</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">segments</span>
+        <span class="n">cuts</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cut_planes</span>
+
+
+        <span class="c"># Get new segments to be sorted into the new octants</span>
+        <span class="n">new_segments</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+            <span class="n">new_segs</span> <span class="o">=</span> <span class="n">seg</span><span class="o">.</span><span class="n">cut_at</span><span class="p">(</span><span class="n">cuts</span><span class="p">)</span>
+            <span class="k">for</span> <span class="n">each_new_seg</span> <span class="ow">in</span> <span class="n">new_segs</span><span class="p">:</span>
+                <span class="n">new_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">each_new_seg</span><span class="p">)</span>
+
+        <span class="c"># Place the segments in appropriate octants</span>
+        <span class="n">octant_contents</span> <span class="o">=</span> <span class="n">find_octants_of_segments</span><span class="p">(</span><span class="n">new_segments</span><span class="p">,</span>
+                                                   <span class="bp">self</span><span class="o">.</span><span class="n">cut_planes</span><span class="p">)</span>
+
+        <span class="c"># Make and run a new OctreeCell for each octant</span>
+        <span class="n">fur</span><span class="p">,</span> <span class="n">flr</span><span class="p">,</span> <span class="n">fll</span><span class="p">,</span> <span class="n">ful</span><span class="p">,</span> <span class="n">bur</span><span class="p">,</span> <span class="n">blr</span><span class="p">,</span> <span class="n">bll</span><span class="p">,</span> <span class="n">bul</span> <span class="o">=</span> <span class="n">octant_contents</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">cut_x</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">cut_z</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">cut_planes</span>
+
+        <span class="n">shapes</span> <span class="o">=</span> <span class="p">((</span><span class="n">cut_x</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">,</span> <span class="n">zmax</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">cut_x</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">,</span> <span class="n">zmax</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cut_x</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">,</span> <span class="n">zmax</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cut_x</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">,</span> <span class="n">zmax</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">cut_x</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">cut_x</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cut_x</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">),</span>
+                  <span class="p">(</span><span class="n">xmin</span><span class="p">,</span> <span class="n">cut_x</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">))</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">8</span><span class="p">):</span>
+            <span class="n">octant_segments</span> <span class="o">=</span> <span class="n">octant_contents</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="k">if</span> <span class="ow">not</span> <span class="nb">len</span><span class="p">(</span><span class="n">octant_segments</span><span class="p">):</span>
+                <span class="k">continue</span>
+            <span class="n">shape</span> <span class="o">=</span> <span class="n">shapes</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+            <span class="n">cxmin</span><span class="p">,</span> <span class="n">cxmax</span><span class="p">,</span> <span class="n">cymin</span><span class="p">,</span> <span class="n">cymax</span><span class="p">,</span> <span class="n">czmin</span><span class="p">,</span> <span class="n">czmax</span> <span class="o">=</span> <span class="n">shape</span>
+            <span class="n">cell_size</span> <span class="o">=</span> <span class="p">(</span><span class="n">cxmax</span><span class="o">-</span><span class="n">cxmin</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">cymax</span><span class="o">-</span><span class="n">cymin</span><span class="p">)</span> <span class="o">+</span> <span class="p">(</span><span class="n">czmax</span><span class="o">-</span><span class="n">czmin</span><span class="p">)</span>
+
+            <span class="n">q</span> <span class="o">=</span> <span class="n">OctreeCell</span><span class="p">(</span><span class="n">octant_segments</span><span class="p">,</span> <span class="n">shape</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">depth</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span>
+                           <span class="n">top_level</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                           <span class="n">state</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">state</span><span class="p">,</span> <span class="n">min_cell</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">min_cell</span><span class="p">,</span>
+                           <span class="n">max_depth</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">max_depth</span><span class="p">,</span>
+                           <span class="n">cut_selection</span><span class="o">=</span><span class="bp">self</span><span class="o">.</span><span class="n">cut_selection</span><span class="p">)</span>
+            <span class="n">q</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">obey_knotting</span><span class="p">)</span>
+
+    
+<div class="viewcode-block" id="OctreeCell.get_equidistant_planes"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.get_equidistant_planes">[docs]</a>    <span class="k">def</span> <span class="nf">get_equidistant_planes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns the x, y and z values halfway along each axis of the</span>
+<span class="sd">        cell, according to self.shape.&#39;&#39;&#39;</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="n">cut_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="n">cut_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">ymax</span> <span class="o">+</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="n">cut_z</span> <span class="o">=</span> <span class="p">(</span><span class="n">zmax</span> <span class="o">+</span> <span class="n">zmin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">cut_x</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">cut_z</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="OctreeCell.get_uniform_random_planes"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.get_uniform_random_planes">[docs]</a>    <span class="k">def</span> <span class="nf">get_uniform_random_planes</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+
+        <span class="sd">&#39;&#39;&#39;Returns x, y and z values each uniformly randomly distributed</span>
+<span class="sd">        through self.shape.&#39;&#39;&#39;</span>
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">([</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmin</span><span class="p">])</span> <span class="o">+</span>
+                <span class="n">n</span><span class="o">.</span><span class="n">random</span><span class="o">.</span><span class="n">random</span><span class="p">(</span><span class="mi">3</span><span class="p">)</span> <span class="o">*</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">get_cell_size</span><span class="p">()))</span>
+</div>
+<div class="viewcode-block" id="OctreeCell.get_cell_size"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.get_cell_size">[docs]</a>    <span class="k">def</span> <span class="nf">get_cell_size</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">3</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span>
+                <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">5</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+        </div>
+<div class="viewcode-block" id="OctreeCell.boundary_lines"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.boundary_lines">[docs]</a>    <span class="k">def</span> <span class="nf">boundary_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Get a line tracing the boundary of the cell. These lines</span>
+<span class="sd">        are passed recursively up the OctreeCell tree so that the top level one</span>
+<span class="sd">        keeps a list of all of them - useful for plotting the tree state</span>
+<span class="sd">        later.&#39;&#39;&#39;</span>
+                 
+        <span class="n">xmin</span><span class="p">,</span> <span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">,</span> <span class="n">zmax</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">shape</span>
+        <span class="k">return</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">([[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmax</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmin</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymax</span><span class="p">,</span> <span class="n">zmax</span><span class="p">],</span>
+                        <span class="p">[</span><span class="n">xmin</span><span class="p">,</span> <span class="n">ymin</span><span class="p">,</span> <span class="n">zmax</span><span class="p">]])</span>
+</div>
+<div class="viewcode-block" id="OctreeCell.get_lines"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.get_lines">[docs]</a>    <span class="k">def</span> <span class="nf">get_lines</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_unnecessary_jumps</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return all the lines of self by joining any segments back</span>
+<span class="sd">        together again.&#39;&#39;&#39;</span>
+        <span class="n">handles</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">handles</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="p">[</span><span class="n">handle</span><span class="o">.</span><span class="n">reconstruct_line</span><span class="p">(</span><span class="n">remove_unnecessary_jumps</span><span class="p">)</span>
+                 <span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">handles</span><span class="p">]</span>
+        <span class="k">return</span> <span class="n">lines</span>
+</div>
+<div class="viewcode-block" id="OctreeCell.get_single_line"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell.get_single_line">[docs]</a>    <span class="k">def</span> <span class="nf">get_single_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_unnecessary_jumps</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Return the first line in the set of lines reconstructed from</span>
+<span class="sd">        segments in self. This is useful for OctreeCells that only had</span>
+<span class="sd">        a single line to begin with, e.g. simplifying a knot.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">lines</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">get_lines</span><span class="p">(</span><span class="n">remove_unnecessary_jumps</span><span class="p">)</span>
+        <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">lines</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Tried to get single line but no lines found.&#39;</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">lines</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+
+        </div></div>
+<div class="viewcode-block" id="Handle"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.Handle">[docs]</a><span class="k">class</span> <span class="nc">Handle</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Simply stores a next and previous LineSegment, with a method to</span>
+<span class="sd">    reconstruct the line by walking along the segments.</span>
+
+<span class="sd">    The Handle is like a LineSegment with no point data - all it does is</span>
+<span class="sd">    sit in the line keeping track of its next and prev segments (which</span>
+<span class="sd">    may be modified by the cut_at method of those LineSegments). Since</span>
+<span class="sd">    it will never change itself, it can be used later to rejoin all these</span>
+<span class="sd">    LineSegments which may have been created arbitrarily deep in the</span>
+<span class="sd">    decomposition, returning the same line that corresponds to its input!</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="nb">next</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prev</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="nb">next</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">prev</span>  
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>
+
+<div class="viewcode-block" id="Handle.reconstruct_line"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.Handle.reconstruct_line">[docs]</a>    <span class="k">def</span> <span class="nf">reconstruct_line</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">remove_unnecessary_jumps</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns the line stored by the handle, by walking along it until</span>
+<span class="sd">        returning to the Handle or reaching a segment with no next entry.</span>
+
+<span class="sd">        If ``remove_unnecessary_jumps`` is True, will remove jumps connected</span>
+<span class="sd">        by a trivial segment along the periodic cell wall.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">comp_segs</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="p">]</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next</span>
+        <span class="k">while</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span>
+            <span class="n">comp_segs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">remove_unnecessary_jumps</span><span class="p">:</span>
+            <span class="n">invalid_indices</span> <span class="o">=</span> <span class="p">[]</span>
+            <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">segment</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comp_segs</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_indices</span><span class="p">:</span>
+                    <span class="n">segment2</span> <span class="o">=</span> <span class="n">comp_segs</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp_segs</span><span class="p">)]</span>
+                    <span class="n">segment3</span> <span class="o">=</span> <span class="n">comp_segs</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">comp_segs</span><span class="p">)]</span>
+                    <span class="k">if</span> <span class="p">(</span><span class="nb">isinstance</span><span class="p">(</span><span class="n">segment</span><span class="p">,</span> <span class="n">CellJumpSegment</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="nb">isinstance</span><span class="p">(</span><span class="n">segment3</span><span class="p">,</span> <span class="n">CellJumpSegment</span><span class="p">)</span> <span class="ow">and</span>
+                        <span class="nb">len</span><span class="p">(</span><span class="n">segment2</span><span class="o">.</span><span class="n">points</span><span class="p">)</span> <span class="o">==</span> <span class="mi">2</span><span class="p">):</span>
+                        <span class="n">invalid_indices</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">i</span><span class="p">)</span>
+
+            <span class="n">comp_segs</span> <span class="o">=</span> <span class="p">[</span><span class="n">seg</span> <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">seg</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">comp_segs</span><span class="p">)</span> <span class="k">if</span>
+                         <span class="n">i</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">invalid_indices</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">resample</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">([</span><span class="n">seg</span><span class="o">.</span><span class="n">points</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="k">for</span>
+                                  <span class="n">seg</span> <span class="ow">in</span> <span class="n">comp_segs</span><span class="p">]</span> <span class="o">+</span>
+                                 <span class="p">[</span><span class="n">comp_segs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">points</span><span class="p">[:</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span>
+                                  <span class="mf">0.00001</span><span class="p">]))</span>
+</div>
+<div class="viewcode-block" id="Handle.get_line_components"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.Handle.get_line_components">[docs]</a>    <span class="k">def</span> <span class="nf">get_line_components</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns a list of all the LineSegments in the line with</span>
+<span class="sd">        this handle.&#39;&#39;&#39;</span>
+        <span class="n">component_segments</span> <span class="o">=</span> <span class="p">[</span><span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="p">]</span>
+        <span class="n">current</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next</span>
+        <span class="k">while</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span> <span class="ow">and</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">current</span> <span class="o">=</span> <span class="n">current</span><span class="o">.</span><span class="n">next</span>
+            <span class="n">component_segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">current</span><span class="p">)</span>
+        <span class="k">return</span> <span class="n">component_segments</span>
+
+        
+</div></div>
+<div class="viewcode-block" id="LineSegment"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.LineSegment">[docs]</a><span class="k">class</span> <span class="nc">LineSegment</span><span class="p">(</span><span class="nb">object</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Stores a section of line, and can split at boundaries.&#39;&#39;&#39;</span>
+
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">points</span><span class="p">,</span> <span class="nb">next</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">prev</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">points</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="nb">next</span>  <span class="c"># the next LineSegment</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">prev</span>  <span class="c"># the previous LineSegment</span>
+
+        <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span> <span class="o">=</span> <span class="n">identifier</span>  <span class="c"># identifies all segments of the</span>
+                                      <span class="c"># same line</span>
+
+
+<div class="viewcode-block" id="LineSegment.cell"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.LineSegment.cell">[docs]</a>    <span class="k">def</span> <span class="nf">cell</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cut_planes</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns a string representing where the LineSegment is,</span>
+<span class="sd">        in terms of which octant of the space divided by cut_planes</span>
+<span class="sd">        x, y, z the LineSegment appears in.</span>
+
+<span class="sd">        This assumes the LineSegment is only within one octant (except</span>
+<span class="sd">        perhaps points on the boundary).</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+
+        <span class="n">cut_x</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">cut_z</span> <span class="o">=</span> <span class="n">cut_planes</span>
+        <span class="n">p</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mf">0.51123</span><span class="o">*</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="n">x</span><span class="p">,</span> <span class="n">y</span><span class="p">,</span> <span class="n">z</span> <span class="o">=</span> <span class="n">p</span>
+        <span class="k">if</span> <span class="n">z</span> <span class="o">&gt;</span> <span class="n">cut_z</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;fur&#39;</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;flr&#39;</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;fll&#39;</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;ful&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Segment not in any region?&#39;</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">z</span> <span class="o">&lt;=</span> <span class="n">cut_z</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&gt;=</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;bur&#39;</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&gt;</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;blr&#39;</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&lt;=</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;bll&#39;</span>
+            <span class="k">elif</span> <span class="n">x</span> <span class="o">&lt;=</span> <span class="n">cut_x</span> <span class="ow">and</span> <span class="n">y</span> <span class="o">&gt;</span> <span class="n">cut_y</span><span class="p">:</span>
+                <span class="k">return</span> <span class="s">&#39;bul&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Segment not in any region?&#39;</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Segment not in any region?&#39;</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="LineSegment.cut_at"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.LineSegment.cut_at">[docs]</a>    <span class="k">def</span> <span class="nf">cut_at</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">cuts</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;Returns a list of new LineSegments, resulting from cutting self at</span>
+<span class="sd">        the given cut planes.</span>
+<span class="sd">        &#39;&#39;&#39;</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">crude_segs</span> <span class="o">=</span> <span class="n">line_to_segments</span><span class="p">(</span><span class="n">points</span><span class="p">,</span> <span class="n">cuts</span><span class="p">,</span> <span class="n">join_ends</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+        <span class="n">segs</span> <span class="o">=</span> <span class="n">crude_segs_to_segs</span><span class="p">(</span><span class="n">crude_segs</span><span class="p">,</span> <span class="bp">self</span><span class="o">.</span><span class="n">identifier</span><span class="p">)</span>
+
+        <span class="c"># crude_segs_to_segs assumes the segments form a loop</span>
+        <span class="c"># here we instead connect the first to self.prev, and</span>
+        <span class="c"># the last to self.next</span>
+        <span class="n">segs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">prev</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="n">segs</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">segs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">next</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">next</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">segs</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="k">return</span> <span class="n">segs</span>
+</div>
+<div class="viewcode-block" id="LineSegment.replace_with_straight_line"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.LineSegment.replace_with_straight_line">[docs]</a>    <span class="k">def</span> <span class="nf">replace_with_straight_line</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">        Replaces self.points with a straight line (i.e. just the first</span>
+<span class="sd">        and last vertices).</span>
+
+<span class="sd">        This is only called when only one segment lies in a quadcell,</span>
+<span class="sd">        therefore components can be cut out safely without worrying</span>
+<span class="sd">        about any other parts of the full curve.&#39;&#39;&#39;</span>
+
+        <span class="k">if</span> <span class="bp">self</span><span class="o">.</span><span class="n">next</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">self</span><span class="o">.</span><span class="n">prev</span><span class="p">:</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]))</span>
+        <span class="k">else</span><span class="p">:</span>  <span class="c"># if the line is a loop, just cut out most points</span>
+            <span class="bp">self</span><span class="o">.</span><span class="n">points</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">[::</span><span class="nb">int</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="bp">self</span><span class="o">.</span><span class="n">points</span><span class="p">)</span><span class="o">/</span><span class="mf">3.</span><span class="p">)]</span>
+
+</div></div>
+<div class="viewcode-block" id="CellJumpSegment"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.CellJumpSegment">[docs]</a><span class="k">class</span> <span class="nc">CellJumpSegment</span><span class="p">(</span><span class="n">LineSegment</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;A special LineSegment that denotes a jump through periodic boundary</span>
+<span class="sd">    conditions. This has no special behaviour of its own, but is</span>
+<span class="sd">    subclassed in case this is useful later.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+</div>
+<div class="viewcode-block" id="line_to_segments"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.line_to_segments">[docs]</a><span class="k">def</span> <span class="nf">line_to_segments</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">cuts</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">join_ends</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a line (set of points), a list of cut planes in</span>
+<span class="sd">    x, y, z, and a parameter to decide whether the line</span>
+<span class="sd">    joining the first and last point should also be cut.</span>
+
+<span class="sd">    Returns a list of shorter lines resulting from cutting at</span>
+<span class="sd">    all these cut planes.&#39;&#39;&#39;</span>
+
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+
+    <span class="k">if</span> <span class="n">cuts</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">xmin</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">xmax</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span><span class="mi">0</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">ymin</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">ymax</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span><span class="mi">1</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+        <span class="n">zmin</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">min</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span> <span class="o">-</span> <span class="mi">1</span>
+        <span class="n">zmax</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">max</span><span class="p">(</span><span class="n">line</span><span class="p">[:,</span><span class="mi">2</span><span class="p">])</span> <span class="o">+</span> <span class="mi">1</span>
+
+        <span class="n">cut_x</span> <span class="o">=</span> <span class="p">(</span><span class="n">xmax</span> <span class="o">+</span> <span class="n">xmin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="n">cut_y</span> <span class="o">=</span> <span class="p">(</span><span class="n">ymax</span> <span class="o">+</span> <span class="n">ymin</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+        <span class="n">cut_z</span> <span class="o">=</span> <span class="p">(</span><span class="n">zmin</span> <span class="o">+</span> <span class="n">zmax</span><span class="p">)</span> <span class="o">/</span> <span class="mf">2.</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">cut_x</span><span class="p">,</span> <span class="n">cut_y</span><span class="p">,</span> <span class="n">cut_z</span> <span class="o">=</span> <span class="n">cuts</span>
+
+    <span class="c"># Cut the line wherever it passes through a quad cell boundary</span>
+    <span class="n">segments</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">cut_i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">nex</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+
+        <span class="n">dv</span> <span class="o">=</span> <span class="n">nex</span> <span class="o">-</span> <span class="n">cur</span>
+        <span class="n">dx</span><span class="p">,</span> <span class="n">dy</span><span class="p">,</span> <span class="n">dz</span> <span class="o">=</span> <span class="n">dv</span>
+
+        <span class="n">cross_cut_x</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cut_x</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">nex</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">-</span> <span class="n">cut_x</span><span class="p">)</span>
+        <span class="n">cross_cut_y</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cut_y</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">nex</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">-</span> <span class="n">cut_y</span><span class="p">)</span>
+        <span class="n">cross_cut_z</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">cut_z</span><span class="p">)</span> <span class="o">!=</span> <span class="n">n</span><span class="o">.</span><span class="n">sign</span><span class="p">(</span><span class="n">nex</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span> <span class="o">-</span> <span class="n">cut_z</span><span class="p">)</span>
+
+        <span class="k">if</span> <span class="n">cross_cut_x</span> <span class="ow">and</span> <span class="n">cross_cut_y</span> <span class="ow">and</span> <span class="n">cross_cut_z</span><span class="p">:</span>
+            <span class="n">x_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cut_x</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span>
+            <span class="n">y_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cut_y</span><span class="p">)</span><span class="o">/</span><span class="n">dy</span>
+            <span class="n">z_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">cut_z</span><span class="p">)</span><span class="o">/</span><span class="n">dz</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">((</span><span class="n">x_cut_pos</span><span class="p">,</span> <span class="n">y_cut_pos</span><span class="p">,</span> <span class="n">z_cut_pos</span><span class="p">))</span>
+            <span class="c"># assert 0 &lt; x_cut_pos &lt; 1 and 0 &lt; y_cut_pos &lt; 1 and 0 &lt; z_cut_pos &lt; 1</span>
+            <span class="n">join_point_1</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">join_point_2</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">join_point_3</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point_1</span><span class="p">))</span>
+            <span class="n">second_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">join_point_1</span><span class="p">,</span> <span class="n">join_point_2</span><span class="p">))</span>
+            <span class="n">third_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">join_point_2</span><span class="p">,</span> <span class="n">join_point_3</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point_3</span>
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">second_seg</span><span class="p">)</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">third_seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cross_cut_x</span> <span class="ow">and</span> <span class="n">cross_cut_y</span><span class="p">:</span>
+            <span class="n">x_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cut_x</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span>
+            <span class="n">y_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cut_y</span><span class="p">)</span><span class="o">/</span><span class="n">dy</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">((</span><span class="n">x_cut_pos</span><span class="p">,</span> <span class="n">y_cut_pos</span><span class="p">))</span>
+            <span class="n">join_point_1</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">join_point_2</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point_1</span><span class="p">))</span>
+            <span class="n">second_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">join_point_1</span><span class="p">,</span> <span class="n">join_point_2</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point_2</span>
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">second_seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cross_cut_x</span> <span class="ow">and</span> <span class="n">cross_cut_z</span><span class="p">:</span>
+            <span class="n">x_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cut_x</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span>
+            <span class="n">z_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">cut_z</span><span class="p">)</span><span class="o">/</span><span class="n">dz</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">((</span><span class="n">x_cut_pos</span><span class="p">,</span> <span class="n">z_cut_pos</span><span class="p">))</span>
+            <span class="n">join_point_1</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">join_point_2</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point_1</span><span class="p">))</span>
+            <span class="n">second_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">join_point_1</span><span class="p">,</span> <span class="n">join_point_2</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point_2</span>
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">second_seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cross_cut_y</span> <span class="ow">and</span> <span class="n">cross_cut_z</span><span class="p">:</span>
+            <span class="n">y_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cut_y</span><span class="p">)</span><span class="o">/</span><span class="n">dy</span>
+            <span class="n">z_cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">cut_z</span><span class="p">)</span><span class="o">/</span><span class="n">dz</span>
+            <span class="n">order</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">sort</span><span class="p">((</span><span class="n">y_cut_pos</span><span class="p">,</span> <span class="n">z_cut_pos</span><span class="p">))</span>
+            <span class="n">join_point_1</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">join_point_2</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">order</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point_1</span><span class="p">))</span>
+            <span class="n">second_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">join_point_1</span><span class="p">,</span> <span class="n">join_point_2</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point_2</span>
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">second_seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cross_cut_x</span><span class="p">:</span>
+            <span class="n">cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="n">cut_x</span><span class="p">)</span><span class="o">/</span><span class="n">dx</span>
+            <span class="k">assert</span> <span class="mf">0.</span> <span class="o">&lt;=</span> <span class="n">cut_pos</span> <span class="o">&lt;=</span> <span class="mf">1.</span>
+            <span class="n">join_point</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">cut_pos</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point</span>
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cross_cut_y</span><span class="p">:</span>
+            <span class="n">cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="n">cut_y</span><span class="p">)</span><span class="o">/</span><span class="n">dy</span>
+            <span class="k">assert</span> <span class="mf">0.</span> <span class="o">&lt;=</span> <span class="n">cut_pos</span> <span class="o">&lt;=</span> <span class="mf">1.</span>
+            <span class="n">join_point</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">cut_pos</span><span class="o">*</span><span class="n">dv</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point</span>
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cross_cut_z</span><span class="p">:</span>
+            <span class="n">cut_pos</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span> <span class="o">*</span> <span class="p">(</span><span class="n">cur</span><span class="p">[</span><span class="mi">2</span><span class="p">]</span><span class="o">-</span><span class="n">cut_z</span><span class="p">)</span><span class="o">/</span><span class="n">dz</span>
+            <span class="k">assert</span> <span class="mf">0.</span> <span class="o">&lt;=</span> <span class="n">cut_pos</span> <span class="o">&lt;=</span> <span class="mf">1.</span>
+            <span class="n">join_point</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">+</span> <span class="n">cut_pos</span><span class="o">*</span><span class="n">dv</span>
+
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span><span class="o">.</span><span class="n">copy</span><span class="p">(),</span> <span class="n">join_point</span><span class="p">))</span>
+            <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="n">join_point</span>
+            <span class="c"># second_seg = n.vstack((join_point, line[(i+1):]))</span>
+
+            <span class="n">cut_i</span> <span class="o">=</span> <span class="n">i</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">first_seg</span><span class="p">)</span>
+
+    <span class="n">final_seg</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">cut_i</span><span class="p">:]</span>
+    <span class="k">if</span> <span class="n">cut_i</span> <span class="o">&gt;</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">if</span> <span class="n">join_ends</span><span class="p">:</span>
+            <span class="n">first_seg</span> <span class="o">=</span> <span class="n">segments</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="mi">0</span><span class="p">)</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">vstack</span><span class="p">((</span><span class="n">final_seg</span><span class="p">,</span> <span class="n">first_seg</span><span class="p">)))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">final_seg</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">segments</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">final_seg</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">segments</span>
+
+</div>
+<div class="viewcode-block" id="crude_segs_to_segs"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.crude_segs_to_segs">[docs]</a><span class="k">def</span> <span class="nf">crude_segs_to_segs</span><span class="p">(</span><span class="n">csegs</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="bp">None</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a list of line segments and makes them into LineSegment</span>
+<span class="sd">    instances, under the assumption that the last is joined to the</span>
+<span class="sd">    first. The segments are labelled by the passed identifier.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">segs</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">csegs</span><span class="p">:</span>
+        <span class="n">s</span> <span class="o">=</span> <span class="n">LineSegment</span><span class="p">(</span><span class="n">s</span><span class="p">,</span> <span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">)</span>
+        <span class="n">segs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">s</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">segs</span><span class="p">)):</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">segs</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">prev</span> <span class="o">=</span> <span class="n">segs</span><span class="p">[(</span><span class="n">i</span><span class="o">-</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">segs</span><span class="p">)]</span>
+        <span class="nb">next</span> <span class="o">=</span> <span class="n">segs</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">segs</span><span class="p">)]</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">prev</span> <span class="o">=</span> <span class="n">prev</span>
+        <span class="n">cur</span><span class="o">.</span><span class="n">next</span> <span class="o">=</span> <span class="nb">next</span>
+    <span class="k">return</span> <span class="n">segs</span>
+
+</div>
+<div class="viewcode-block" id="angle_exceeds"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.angle_exceeds">[docs]</a><span class="k">def</span> <span class="nf">angle_exceeds</span><span class="p">(</span><span class="n">ps</span><span class="p">,</span> <span class="n">val</span><span class="o">=</span><span class="mi">2</span><span class="o">*</span><span class="n">n</span><span class="o">.</span><span class="n">pi</span><span class="p">,</span> <span class="n">include_closure</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Returns True if the sum of angles along ps exceeds</span>
+<span class="sd">    val, else False.</span>
+
+<span class="sd">    If include_closure, includes the angles with the line closing</span>
+<span class="sd">    the end and start points.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">angle</span> <span class="o">=</span> <span class="mf">0.</span>
+    <span class="n">nex</span> <span class="o">=</span> <span class="n">ps</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="n">nex2</span> <span class="o">=</span> <span class="n">ps</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+    <span class="n">dv2</span> <span class="o">=</span> <span class="n">nex2</span><span class="o">-</span><span class="n">nex</span>
+    <span class="n">dv2</span> <span class="o">/=</span> <span class="n">mag</span><span class="p">(</span><span class="n">dv2</span><span class="p">)</span>
+    <span class="n">checks</span> <span class="o">=</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ps</span><span class="p">))</span> <span class="k">if</span> <span class="n">include_closure</span> <span class="k">else</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">ps</span><span class="p">)</span><span class="o">-</span><span class="mi">2</span><span class="p">)</span>
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="n">checks</span><span class="p">:</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">nex</span>
+        <span class="n">nex</span> <span class="o">=</span> <span class="n">nex2</span>
+        <span class="n">nex2</span> <span class="o">=</span> <span class="n">ps</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">2</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">ps</span><span class="p">)]</span>
+        <span class="n">dv</span> <span class="o">=</span> <span class="n">dv2</span>
+        <span class="n">dv2</span> <span class="o">=</span> <span class="n">nex2</span><span class="o">-</span><span class="n">nex</span>
+        <span class="n">dv2</span> <span class="o">/=</span> <span class="n">mag</span><span class="p">(</span><span class="n">dv2</span><span class="p">)</span>
+        <span class="n">increment</span> <span class="o">=</span> <span class="n">angle_between</span><span class="p">(</span><span class="n">dv</span><span class="p">,</span> <span class="n">dv2</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">increment</span><span class="p">):</span>
+            <span class="k">return</span> <span class="bp">True</span>
+        <span class="n">angle</span> <span class="o">+=</span> <span class="n">increment</span>
+        <span class="k">if</span> <span class="n">angle</span> <span class="o">&gt;</span> <span class="n">val</span><span class="p">:</span>
+            <span class="k">return</span> <span class="bp">True</span>
+    <span class="k">assert</span> <span class="ow">not</span> <span class="n">n</span><span class="o">.</span><span class="n">isnan</span><span class="p">(</span><span class="n">angle</span><span class="p">)</span>
+    <span class="k">return</span> <span class="bp">False</span>
+</div>
+<div class="viewcode-block" id="angle_between"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.angle_between">[docs]</a><span class="k">def</span> <span class="nf">angle_between</span><span class="p">(</span><span class="n">v1</span><span class="p">,</span> <span class="n">v2</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Returns angle between v1 and v2, assuming they are normalised to 1.&#39;&#39;&#39;</span>
+    <span class="c"># clip becaus v1.dot(v2) may exceed 1 due to floating point</span>
+    <span class="k">return</span> <span class="n">n</span><span class="o">.</span><span class="n">arccos</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">clip</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">v1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v2</span><span class="p">)),</span> <span class="mf">0.</span><span class="p">,</span> <span class="mf">1.</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="mag"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.mag">[docs]</a><span class="k">def</span> <span class="nf">mag</span><span class="p">(</span><span class="n">v</span><span class="p">):</span>
+    <span class="k">return</span> <span class="n">n</span><span class="o">.</span><span class="n">sqrt</span><span class="p">(</span><span class="n">v</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">v</span><span class="p">))</span>
+</div>
+<div class="viewcode-block" id="find_octants_of_segments"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.find_octants_of_segments">[docs]</a><span class="k">def</span> <span class="nf">find_octants_of_segments</span><span class="p">(</span><span class="n">segments</span><span class="p">,</span> <span class="n">cuts</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;For each LineSegment in the passed segments, returns an</span>
+<span class="sd">    identifier for the octant it should be placed in&#39;&#39;&#39;</span>
+    <span class="n">fur</span> <span class="o">=</span> <span class="p">[]</span>  <span class="c"># front upper right etc.</span>
+    <span class="n">flr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">fll</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">ful</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">bur</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">blr</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">bll</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">bul</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">seg</span> <span class="ow">in</span> <span class="n">segments</span><span class="p">:</span>
+        <span class="n">cell</span> <span class="o">=</span> <span class="n">seg</span><span class="o">.</span><span class="n">cell</span><span class="p">(</span><span class="n">cuts</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;fur&#39;</span><span class="p">:</span>
+            <span class="n">fur</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;flr&#39;</span><span class="p">:</span>
+            <span class="n">flr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;fll&#39;</span><span class="p">:</span>
+            <span class="n">fll</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;ful&#39;</span><span class="p">:</span>
+            <span class="n">ful</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;bur&#39;</span><span class="p">:</span>
+            <span class="n">bur</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;blr&#39;</span><span class="p">:</span>
+            <span class="n">blr</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;bll&#39;</span><span class="p">:</span>
+            <span class="n">bll</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">cell</span> <span class="o">==</span> <span class="s">&#39;bul&#39;</span><span class="p">:</span>
+            <span class="n">bul</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">seg</span><span class="p">)</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;Segment not in recognised cell.&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="p">(</span><span class="n">fur</span><span class="p">,</span> <span class="n">flr</span><span class="p">,</span> <span class="n">fll</span><span class="p">,</span> <span class="n">ful</span><span class="p">,</span> <span class="n">bur</span><span class="p">,</span> <span class="n">blr</span><span class="p">,</span> <span class="n">bll</span><span class="p">,</span> <span class="n">bul</span><span class="p">)</span>
+</div>
+<div class="viewcode-block" id="resample"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.resample">[docs]</a><span class="k">def</span> <span class="nf">resample</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a set of points, and cuts out the middle ones if they form</span>
+<span class="sd">    part of a straight line, or if they are identical to the previous</span>
+<span class="sd">    point.&#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mi">2</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">points</span>
+
+    <span class="n">changing</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">while</span> <span class="n">changing</span><span class="p">:</span>
+        <span class="n">changing</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+        <span class="n">keep</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="nb">bool</span><span class="p">)</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+        <span class="n">nex</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span>
+        <span class="n">dv2</span> <span class="o">=</span> <span class="n">nex</span><span class="o">-</span><span class="n">cur</span>
+        <span class="n">dv2</span> <span class="o">/=</span> <span class="n">mag</span><span class="p">(</span><span class="n">dv2</span><span class="p">)</span>
+
+        <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">1</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">):</span>
+            <span class="n">prev</span> <span class="o">=</span> <span class="n">cur</span>
+            <span class="n">cur</span> <span class="o">=</span> <span class="n">nex</span>
+            <span class="n">nex</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+            <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">less</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">cur</span><span class="o">-</span><span class="n">nex</span><span class="p">),</span> <span class="mf">0.0001</span><span class="p">)):</span>
+                <span class="n">keep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">dv1</span> <span class="o">=</span> <span class="n">cur</span> <span class="o">-</span> <span class="n">prev</span>
+                <span class="n">dv1</span> <span class="o">/=</span> <span class="n">mag</span><span class="p">(</span><span class="n">dv1</span><span class="p">)</span>
+                <span class="n">dv2</span> <span class="o">=</span> <span class="n">nex</span> <span class="o">-</span> <span class="n">cur</span>
+                <span class="n">dv2</span> <span class="o">/=</span> <span class="n">mag</span><span class="p">(</span><span class="n">dv2</span><span class="p">)</span>
+                <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">dv1</span><span class="o">.</span><span class="n">dot</span><span class="p">(</span><span class="n">dv2</span><span class="p">)</span> <span class="o">-</span> <span class="mi">1</span><span class="p">)</span> <span class="o">&lt;</span> <span class="mf">0.0001</span><span class="p">:</span>
+                    <span class="n">keep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+        <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+        <span class="n">new_length</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">new_length</span> <span class="o">!=</span> <span class="n">length</span><span class="p">:</span>
+            <span class="n">changing</span> <span class="o">=</span> <span class="bp">True</span>
+    <span class="k">return</span> <span class="n">points</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+</div>
+<div class="viewcode-block" id="remove_nearby_points"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.remove_nearby_points">[docs]</a><span class="k">def</span> <span class="nf">remove_nearby_points</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a set of points, and removes those that are no distance from</span>
+<span class="sd">    the previous one.&#39;&#39;&#39;</span>
+    <span class="n">points</span> <span class="o">=</span> <span class="n">points</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">keep</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">ones</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">n</span><span class="o">.</span><span class="n">bool</span><span class="p">)</span>
+
+    <span class="n">comparator</span> <span class="o">=</span> <span class="n">points</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">point</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">points</span><span class="p">):</span>
+        <span class="n">nex</span> <span class="o">=</span> <span class="n">points</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="nb">len</span><span class="p">(</span><span class="n">points</span><span class="p">)]</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">all</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">((</span><span class="n">nex</span> <span class="o">-</span> <span class="n">point</span><span class="p">))</span> <span class="o">&lt;</span> <span class="mf">0.00001</span><span class="p">):</span>
+            <span class="n">keep</span><span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">keep</span><span class="p">[</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span> <span class="o">=</span> <span class="bp">True</span>
+
+    <span class="k">return</span> <span class="n">points</span><span class="p">[</span><span class="n">keep</span><span class="p">]</span>
+                 
+</div>
+<div class="viewcode-block" id="split_cell_line"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.split_cell_line">[docs]</a><span class="k">def</span> <span class="nf">split_cell_line</span><span class="p">(</span><span class="n">line</span><span class="p">,</span> <span class="n">shape</span><span class="o">=</span><span class="p">(</span><span class="mi">10</span><span class="p">,</span> <span class="mi">10</span><span class="p">,</span> <span class="mf">10.</span><span class="p">)):</span>
+    <span class="sd">&#39;&#39;&#39;Takes a cell lines, and cuts at the periodic boundaries</span>
+<span class="sd">    (in this represenation, this is where it jumps)&#39;&#39;&#39;</span>
+    <span class="n">shape</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">array</span><span class="p">(</span><span class="n">shape</span><span class="p">)</span>
+    <span class="n">line</span> <span class="o">=</span> <span class="n">line</span><span class="o">.</span><span class="n">copy</span><span class="p">()</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">out</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">while</span> <span class="n">i</span> <span class="o">&lt;</span> <span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">line</span><span class="p">)</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="n">cur</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="n">nex</span> <span class="o">=</span> <span class="n">line</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">n</span><span class="o">.</span><span class="n">any</span><span class="p">(</span><span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">nex</span><span class="o">-</span><span class="n">cur</span><span class="p">)</span> <span class="o">&gt;</span> <span class="n">shape</span><span class="p">):</span>
+            <span class="n">firsthalf</span> <span class="o">=</span> <span class="n">line</span><span class="p">[:(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)]</span>
+            <span class="n">secondhalf</span> <span class="o">=</span> <span class="n">line</span><span class="p">[(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">):]</span>
+            <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">firsthalf</span><span class="p">)</span>
+            <span class="n">line</span> <span class="o">=</span> <span class="n">secondhalf</span>
+            <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+    <span class="n">out</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">line</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">out</span>
+
+<span class="c"># Setup functions that *may* depend on cython</span></div>
+<span class="n">angle_exceeds_func</span> <span class="o">=</span> <span class="n">angle_exceeds</span>
+<span class="c"># angle_exceeds_func = (cangle_exceeds if cangle_exceeds is not None</span>
+<span class="c">#                       else angle_exceeds)</span>
+<span class="n">line_to_segments_func</span> <span class="o">=</span> <span class="n">line_to_segments</span>
+<span class="c"># line_to_segments_func = (cline_to_segments if cline_to_segments is not None</span>
+<span class="c">#                       else line_to_segments)</span>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

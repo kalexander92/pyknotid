@@ -1,0 +1,519 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.representations package &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>pyknot2.representations package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/apidoc_test/pyknot2.representations.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="pyknot2-representations-package">
+<h1>pyknot2.representations package<a class="headerlink" href="#pyknot2-representations-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyknot2.representations.gausscode">
+<span id="pyknot2-representations-gausscode-module"></span><h2>pyknot2.representations.gausscode module<a class="headerlink" href="#module-pyknot2.representations.gausscode" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="gauss-code">
+<h3>Gauss code<a class="headerlink" href="#gauss-code" title="Permalink to this headline">¶</a></h3>
+<p>Classes for working with Gauss codes representing planar projections
+of curves.</p>
+<p>See class documentation for more details.</p>
+<dl class="class">
+<dt id="pyknot2.representations.gausscode.GaussCode">
+<em class="property">class </em><tt class="descclassname">pyknot2.representations.gausscode.</tt><tt class="descname">GaussCode</tt><big>(</big><em>crossings=''</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/gausscode.html#GaussCode"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.gausscode.GaussCode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Class for containing and manipulating Gauss codes.</p>
+<p>This implements <em>only</em> extended Gauss code that includes the sign
+of each crossing (clockwise or anticlockwise).</p>
+<p>The length of a Gauss code (e.g. <tt class="docutils literal"><span class="pre">len(GaussCode())</span></tt>) is the
+number of crossings in it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>crossings</strong> : array-like or string or PlanarDiagram or GaussCode</p>
+<blockquote class="last">
+<div><p>A raw_crossings array from a
+<a class="reference internal" href="pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a>
+or <a class="reference internal" href="pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Link" title="pyknot2.spacecurves.spacecurves.Link"><tt class="xref py py-class docutils literal"><span class="pre">Link</span></tt></a>, or a string
+representation of the form (e.g.)
+<tt class="docutils literal"><span class="pre">1+c,2-c,3+c,1-c,2+c,3-c</span></tt>, with commas between entries,
+and with multiple link components separated by spaces and/or
+newlines. If a PlanarDiagram or GaussCode is passed, the code
+is duplicated.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.representations.gausscode.GaussCode.simplify">
+<tt class="descname">simplify</tt><big>(</big><em>one=True</em>, <em>two=True</em>, <em>one_extended=True</em>, <em>verbose=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/gausscode.html#GaussCode.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.gausscode.GaussCode.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplifies the GaussCode, performing the given Reidemeister moves
+everywhere possible, as many times as possible, until the
+GaussCode is no longer changing.</p>
+<p>This modifies the GaussCode - (non-topological) information may
+be lost!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>one</strong> : bool</p>
+<blockquote>
+<div><p>Whether to use Reidemeister 1, defaults to True.</p>
+</div></blockquote>
+<p><strong>two</strong> : bool</p>
+<blockquote>
+<div><p>Whether to use Reidemeister 2, defaults to True.</p>
+</div></blockquote>
+<p><strong>one_extended</strong> : bool</p>
+<blockquote>
+<div><p>Whether to use extended Reidemeister 1, which removes crossings
+connected by arcs which include only over or only under crossings
+(and which must thus be topologically irrelevant). Defaults
+to True.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote class="last">
+<div><p>Whether to print information about the ongoing siplification.
+Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-pyknot2.representations.planardiagram">
+<span id="pyknot2-representations-planardiagram-module"></span><h2>pyknot2.representations.planardiagram module<a class="headerlink" href="#module-pyknot2.representations.planardiagram" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="planar-diagrams">
+<h3>Planar diagrams<a class="headerlink" href="#planar-diagrams" title="Permalink to this headline">¶</a></h3>
+<p>Classes for working with planar diagram notation of knot diagrams.</p>
+<p>See individual class documentation for more details.</p>
+<dl class="class">
+<dt id="pyknot2.representations.planardiagram.Crossing">
+<em class="property">class </em><tt class="descclassname">pyknot2.representations.planardiagram.</tt><tt class="descname">Crossing</tt><big>(</big><em>a=None</em>, <em>b=None</em>, <em>c=None</em>, <em>d=None</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#Crossing"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.Crossing" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></p>
+<p>A single crossing in a planar diagram. Each <a class="reference internal" href="#pyknot2.representations.planardiagram.PlanarDiagram" title="pyknot2.representations.planardiagram.PlanarDiagram"><tt class="xref py py-class docutils literal"><span class="pre">PlanarDiagram</span></tt></a>
+is a list of these.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>a</strong> : int or None</p>
+<blockquote>
+<div><p>The first entry in the list of lines meeting at this Crossing.</p>
+</div></blockquote>
+<p><strong>b</strong> : int or None</p>
+<blockquote>
+<div><p>The second entry in the list of lines meeting at this Crossing.</p>
+</div></blockquote>
+<p><strong>c</strong> : int or None</p>
+<blockquote>
+<div><p>The third entry in the list of lines meeting at this Crossing.</p>
+</div></blockquote>
+<p><strong>d</strong> : int or None</p>
+<blockquote class="last">
+<div><p>The fourth entry in the list of lines meeting at this Crossing.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.representations.planardiagram.Crossing.as_mathematica">
+<tt class="descname">as_mathematica</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#Crossing.as_mathematica"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.Crossing.as_mathematica" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a string of mathematica code that can represent the Crossing
+in mathematica&#8217;s knot library.</p>
+<p>The mathematica code won&#8217;t be valid if any lines of self are None.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">str</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.representations.planardiagram.Crossing.components">
+<tt class="descname">components</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#Crossing.components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.Crossing.components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a de-duplicated list of lines intersecting at this Crossing.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body">list</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.representations.planardiagram.Crossing.update_line_number">
+<tt class="descname">update_line_number</tt><big>(</big><em>old</em>, <em>new</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#Crossing.update_line_number"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.Crossing.update_line_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces all instances of the given line number in self.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>old</strong> : int</p>
+<blockquote>
+<div><p>The old line number</p>
+</div></blockquote>
+<p><strong>new</strong> : int</p>
+<blockquote class="last">
+<div><p>The number to replace it with</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.representations.planardiagram.Crossing.valid">
+<tt class="descname">valid</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#Crossing.valid"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.Crossing.valid" title="Permalink to this definition">¶</a></dt>
+<dd><p>True if all intersecting lines are not None.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyknot2.representations.planardiagram.PlanarDiagram">
+<em class="property">class </em><tt class="descclassname">pyknot2.representations.planardiagram.</tt><tt class="descname">PlanarDiagram</tt><big>(</big><em>crossings=''</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#PlanarDiagram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.PlanarDiagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></p>
+<p>A class for containing and manipulating planar diagrams.</p>
+<p>Just provides convenient display and conversion methods for now.
+In the future, will support simplification.</p>
+<p>Shorthand input may be of the form <tt class="docutils literal"><span class="pre">X_1,4,2,5</span> <span class="pre">X_3,6,4,1</span> <span class="pre">X_5,2,6,3</span></tt>.
+This is (should be?) the same as returned by repr.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>crossings</strong> : array-like or string or GaussCode</p>
+<blockquote class="last">
+<div><p>The list of crossings in the diagram, which will be converted
+to an internal planar diagram representation. Currently these are
+mostly converted via a GaussCode instance, so in addition to the
+shorthand any array-like supported by
+<a class="reference internal" href="#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a> may be used.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.representations.planardiagram.PlanarDiagram.as_mathematica">
+<tt class="descname">as_mathematica</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#PlanarDiagram.as_mathematica"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.PlanarDiagram.as_mathematica" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a mathematica code representation of self, usable in the
+mathematica knot tools.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.representations.planardiagram.PlanarDiagram.as_spherogram">
+<tt class="descname">as_spherogram</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#PlanarDiagram.as_spherogram"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.PlanarDiagram.as_spherogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a planar diagram class from the Spherogram module, which
+can be used to access SnapPy&#8217;s manifold tools.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.representations.planardiagram.gausscode_to_crossings">
+<tt class="descclassname">pyknot2.representations.planardiagram.</tt><tt class="descname">gausscode_to_crossings</tt><big>(</big><em>gc</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#gausscode_to_crossings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.gausscode_to_crossings" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.representations.planardiagram.shorthand_to_crossings">
+<tt class="descclassname">pyknot2.representations.planardiagram.</tt><tt class="descname">shorthand_to_crossings</tt><big>(</big><em>s</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/representations/planardiagram.html#shorthand_to_crossings"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.representations.planardiagram.shorthand_to_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a planar diagram shorthand string, and returns a list of
+:class:<a href="#id1"><span class="problematic" id="id2">`</span></a>Crossing`s.</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-pyknot2.representations">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyknot2.representations" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="knot-representations">
+<h3>Knot representations<a class="headerlink" href="#knot-representations" title="Permalink to this headline">¶</a></h3>
+<p>This module contains classes and functions for representing
+knots in knot diagrams, mainly the
+<a class="reference internal" href="#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">pyknot2.representations.gausscode.GaussCode</span></tt></a> and
+<a class="reference internal" href="#pyknot2.representations.planardiagram.PlanarDiagram" title="pyknot2.representations.planardiagram.PlanarDiagram"><tt class="xref py py-class docutils literal"><span class="pre">pyknot2.representations.planardiagram.PlanarDiagram</span></tt></a>.</p>
+<p>These provide convenient methods to convert between different
+representations, and to simplify via Reidemeister moves.</p>
+<dl class="class">
+<dt id="pyknot2.representations.GaussCode">
+<em class="property">class </em><tt class="descclassname">pyknot2.representations.</tt><tt class="descname">GaussCode</tt><big>(</big><em>crossings=''</em><big>)</big><a class="headerlink" href="#pyknot2.representations.GaussCode" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Class for containing and manipulating Gauss codes.</p>
+<p>This implements <em>only</em> extended Gauss code that includes the sign
+of each crossing (clockwise or anticlockwise).</p>
+<p>The length of a Gauss code (e.g. <tt class="docutils literal"><span class="pre">len(GaussCode())</span></tt>) is the
+number of crossings in it.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>crossings</strong> : array-like or string or PlanarDiagram or GaussCode</p>
+<blockquote class="last">
+<div><p>A raw_crossings array from a
+<a class="reference internal" href="pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a>
+or <a class="reference internal" href="pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Link" title="pyknot2.spacecurves.spacecurves.Link"><tt class="xref py py-class docutils literal"><span class="pre">Link</span></tt></a>, or a string
+representation of the form (e.g.)
+<tt class="docutils literal"><span class="pre">1+c,2-c,3+c,1-c,2+c,3-c</span></tt>, with commas between entries,
+and with multiple link components separated by spaces and/or
+newlines. If a PlanarDiagram or GaussCode is passed, the code
+is duplicated.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.representations.GaussCode.simplify">
+<tt class="descname">simplify</tt><big>(</big><em>one=True</em>, <em>two=True</em>, <em>one_extended=True</em>, <em>verbose=True</em><big>)</big><a class="headerlink" href="#pyknot2.representations.GaussCode.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplifies the GaussCode, performing the given Reidemeister moves
+everywhere possible, as many times as possible, until the
+GaussCode is no longer changing.</p>
+<p>This modifies the GaussCode - (non-topological) information may
+be lost!</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>one</strong> : bool</p>
+<blockquote>
+<div><p>Whether to use Reidemeister 1, defaults to True.</p>
+</div></blockquote>
+<p><strong>two</strong> : bool</p>
+<blockquote>
+<div><p>Whether to use Reidemeister 2, defaults to True.</p>
+</div></blockquote>
+<p><strong>one_extended</strong> : bool</p>
+<blockquote>
+<div><p>Whether to use extended Reidemeister 1, which removes crossings
+connected by arcs which include only over or only under crossings
+(and which must thus be topologically irrelevant). Defaults
+to True.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote class="last">
+<div><p>Whether to print information about the ongoing siplification.
+Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyknot2.representations.PlanarDiagram">
+<em class="property">class </em><tt class="descclassname">pyknot2.representations.</tt><tt class="descname">PlanarDiagram</tt><big>(</big><em>crossings=''</em><big>)</big><a class="headerlink" href="#pyknot2.representations.PlanarDiagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">list</span></tt></p>
+<p>A class for containing and manipulating planar diagrams.</p>
+<p>Just provides convenient display and conversion methods for now.
+In the future, will support simplification.</p>
+<p>Shorthand input may be of the form <tt class="docutils literal"><span class="pre">X_1,4,2,5</span> <span class="pre">X_3,6,4,1</span> <span class="pre">X_5,2,6,3</span></tt>.
+This is (should be?) the same as returned by repr.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>crossings</strong> : array-like or string or GaussCode</p>
+<blockquote class="last">
+<div><p>The list of crossings in the diagram, which will be converted
+to an internal planar diagram representation. Currently these are
+mostly converted via a GaussCode instance, so in addition to the
+shorthand any array-like supported by
+<a class="reference internal" href="#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a> may be used.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.representations.PlanarDiagram.as_mathematica">
+<tt class="descname">as_mathematica</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.representations.PlanarDiagram.as_mathematica" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a mathematica code representation of self, usable in the
+mathematica knot tools.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.representations.PlanarDiagram.as_spherogram">
+<tt class="descname">as_spherogram</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.representations.PlanarDiagram.as_spherogram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a planar diagram class from the Spherogram module, which
+can be used to access SnapPy&#8217;s manifold tools.</p>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

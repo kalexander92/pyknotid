@@ -14,6 +14,7 @@ from scipy.interpolate import interp1d
 try:
     from pyknot2.spacecurves import chelpers
 except ImportError:
+    print 'could not import chelpers'
     from pyknot2.spacecurves import helpers as chelpers
 from pyknot2.spacecurves import helpers as helpers
 from pyknot2.spacecurves.geometry import arclength, radius_of_gyration
@@ -403,7 +404,10 @@ class SpaceCurve(object):
             These are passed directly to :meth:`raw_crossings`.
         '''
         crossings = self.raw_crossings(**kwargs)
-        return n.sum(crossings[:, 3]) / 2.
+        if len(crossings) != 0:
+            return n.sum(crossings[:, 3]) / 2.
+        else:
+            return 0.
 
     def writhe(self, samples=10, recalculate=False, **kwargs):
         '''
@@ -504,7 +508,6 @@ class SpaceCurve(object):
         gc = Representation(crossings, verbose=self.verbose)
         self._representation = gc
         return gc
-        
 
     def planar_diagram(self, **kwargs):
         '''
@@ -796,3 +799,23 @@ class SpaceCurve(object):
             points[:, 1] = smooth(points[:, 1], window_len, window)
             points[:, 2] = smooth(points[:, 2], window_len, window)
         self.points = points[(window_len + 1):-(window_len + 1)]
+
+    def random_perturbation(self, size=0.3):
+        '''
+        Moves all points by applying a random vector of a given size
+        to all points.
+
+        Parameters
+        ----------
+        size : float
+            The size of the perturbation vector, given as a factor of
+            the smallest distance between adjacent points
+        '''
+        smallest_distance = n.min(n.diff(self.points))
+        perturbations = sample_spherical(len(self.points))
+        self.points = self.points + n.transpose(perturbations) * size
+
+def sample_spherical(npoints, ndim=3):
+    vec = n.random.randn(ndim, npoints)
+    vec /= n.linalg.norm(vec, axis=0)
+    return vec

@@ -1,0 +1,813 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Space curves &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../index.html"/>
+        <link rel="next" title="Gauss code" href="../representations/gausscode.html"/>
+        <link rel="prev" title="pyknot2" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+    <li>Space curves</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../../_sources/api/spacecurves/spacecurves.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <span class="target" id="module-pyknot2.spacecurves.spacecurves"></span><div class="section" id="space-curves">
+<h1>Space curves<a class="headerlink" href="#space-curves" title="Permalink to this headline">¶</a></h1>
+<p>Classes for dealing with knots (a single line, which may be
+topologically trivial) and links (multiple Knot classes).</p>
+<dl class="class">
+<dt id="pyknot2.spacecurves.spacecurves.Knot">
+<em class="property">class </em><tt class="descclassname">pyknot2.spacecurves.spacecurves.</tt><tt class="descname">Knot</tt><big>(</big><em>points</em>, <em>verbose=True</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for holding the vertices of a single line, providing helper
+methods for convenient manipulation and analysis.</p>
+<p>A <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a> just represents a single space curve, it may be
+topologically trivial!</p>
+<p>This class deliberately combines methods to do many different kinds
+of measurements or manipulations. Some of these are externally
+available through other modules in pyknot2 - if so, this is usually
+indicated in the method docstrings.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><ul class="first last simple">
+<li><strong>points</strong> (<em>array-like</em>) &#8211; the 3d points (vertices) of a piecewise
+linear curve representation</li>
+<li><strong>verbose</strong> (<em>bool</em>) &#8211; indicates whether the Knot should print
+information during processing</li>
+</ul>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.alexander_polynomial">
+<tt class="descname">alexander_polynomial</tt><big>(</big><em>variable=-1</em>, <em>quadrant='lr'</em>, <em>mode='python'</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.alexander_polynomial" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Alexander polynomial at the given point,
+as calculated by <a class="reference internal" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.alexander" title="pyknot2.invariants.alexander"><tt class="xref py py-func docutils literal"><span class="pre">pyknot2.invariants.alexander()</span></tt></a>.</p>
+<p>See <a class="reference internal" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.alexander" title="pyknot2.invariants.alexander"><tt class="xref py py-func docutils literal"><span class="pre">pyknot2.invariants.alexander()</span></tt></a> for the meanings
+of the named arguments.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.arclength">
+<tt class="descname">arclength</tt><big>(</big><em>include_closure=True</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.arclength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the arclength of the line, the sum of lengths of each
+piecewise linear segment.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>include_closure</strong> : bool</p>
+<blockquote class="last">
+<div><p>Whether to include the distance between the final and
+first points. Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.average_crossing_number">
+<tt class="descname">average_crossing_number</tt><big>(</big><em>samples=10</em>, <em>recalculate=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.average_crossing_number" title="Permalink to this definition">¶</a></dt>
+<dd><p>The (approximate) average crossing number of the space curve,
+obtained by averaging
+the planar writhe over the given number of directions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples</strong> : int</p>
+<blockquote>
+<div><p>The number of directions to average over.</p>
+</div></blockquote>
+<p><strong>recalculate</strong> : bool</p>
+<blockquote>
+<div><p>Whether to recalculate the ACN.</p>
+</div></blockquote>
+<p><strong>**kwargs :</strong> :</p>
+<blockquote class="last">
+<div><p>These are passed directly to <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.raw_crossings" title="pyknot2.spacecurves.spacecurves.Knot.raw_crossings"><tt class="xref py py-meth docutils literal"><span class="pre">raw_crossings()</span></tt></a>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.exterior_manifold">
+<tt class="descname">exterior_manifold</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.exterior_manifold" title="Permalink to this definition">¶</a></dt>
+<dd><p>The knot complement manifold of self as a SnapPy class
+giving access to all of SnapPy&#8217;s tools.</p>
+<p>This method requires that Spherogram, and possibly SnapPy,
+are installed.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.from_json">
+<em class="property">classmethod </em><tt class="descname">from_json</tt><big>(</big><em>filen</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.from_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Loads knot points from the given filename, assuming json format,
+and returns a <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a> with those points.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.from_lattice_data">
+<em class="property">classmethod </em><tt class="descname">from_lattice_data</tt><big>(</big><em>line</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.from_lattice_data" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a> instance in which the line has been
+slightly translated and rotated, in order to (practically) ensure
+no self intersections in closure or coincident points in
+projection.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Return type:</th><td class="field-body"><a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a></td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.from_periodic_line">
+<em class="property">classmethod </em><tt class="descname">from_periodic_line</tt><big>(</big><em>line</em>, <em>shape</em>, <em>perturb=True</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.from_periodic_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a> instance in which the line has been
+unwrapped through
+the periodic boundaries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>line</strong> : array-like</p>
+<blockquote>
+<div><p>The Nx3 vector of points in the line</p>
+</div></blockquote>
+<p><strong>shape</strong> : array-like</p>
+<blockquote>
+<div><p>The x, y, z distances of the periodic boundary</p>
+</div></blockquote>
+<p><strong>perturb</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True, translates and rotates the knot to avoid any lattice
+problems.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.gauss_code">
+<tt class="descname">gauss_code</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.gauss_code" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="../../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a>
+instance representing the crossings of the knot.</p>
+<p>The GaussCode instance is cached internally. If you want to
+recalculate it (e.g. to get an unsimplified version if you
+have simplified it), you should pass <cite>recalculate=True</cite>.</p>
+<p>This method passes kwargs directly to <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.raw_crossings" title="pyknot2.spacecurves.spacecurves.Knot.raw_crossings"><tt class="xref py py-meth docutils literal"><span class="pre">raw_crossings()</span></tt></a>,
+see the documentation of that function for all options.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.hyperbolic_volume">
+<tt class="descname">hyperbolic_volume</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.hyperbolic_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the hyperbolic volume at the given point, via
+<a class="reference internal" href="../../apidoc_test/pyknot2.representations.html#pyknot2.representations.PlanarDiagram.as_spherogram" title="pyknot2.representations.PlanarDiagram.as_spherogram"><tt class="xref py py-meth docutils literal"><span class="pre">pyknot2.representations.PlanarDiagram.as_spherogram()</span></tt></a>.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.octree_simplify">
+<tt class="descname">octree_simplify</tt><big>(</big><em>runs=1</em>, <em>plot=False</em>, <em>rotate=True</em>, <em>obey_knotting=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.octree_simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplifies the curve via the octree reduction of
+<a href="#id1"><span class="problematic" id="id2">:module:`pyknot2.simplify.octree`</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>runs</strong> : int</p>
+<blockquote>
+<div><p>The number of times to run the octree simplification.
+Defaults to 1.</p>
+</div></blockquote>
+<p><strong>plot</strong> : bool</p>
+<blockquote>
+<div><p>Whether to plot the curve after each run. Defaults to False.</p>
+</div></blockquote>
+<p><strong>rotate</strong> : bool</p>
+<blockquote>
+<div><p>Whether to rotate the space curve before each run. Defaults
+to True as this can make things much faster.</p>
+</div></blockquote>
+<p><strong>obey_knotting</strong> : bool</p>
+<blockquote>
+<div><p>Whether to not let the line pass through itself. Defaults to
+True as this is always what you want for a closed curve.</p>
+</div></blockquote>
+<p><strong>**kwargs</strong> :</p>
+<blockquote class="last">
+<div><p>Any remaining kwargs are passed to the
+<a class="reference internal" href="../../apidoc_test/pyknot2.simplify.html#pyknot2.simplify.octree.OctreeCell" title="pyknot2.simplify.octree.OctreeCell"><tt class="xref py py-class docutils literal"><span class="pre">pyknot2.simplify.octree.OctreeCell</span></tt></a>
+constructor.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.planar_diagram">
+<tt class="descname">planar_diagram</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.planar_diagram" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a
+<a class="reference internal" href="../../apidoc_test/pyknot2.representations.html#pyknot2.representations.planardiagram.PlanarDiagram" title="pyknot2.representations.planardiagram.PlanarDiagram"><tt class="xref py py-class docutils literal"><span class="pre">PlanarDiagram</span></tt></a>
+instance representing the crossings of the knot.</p>
+<p>This method passes kwargs directly to <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.raw_crossings" title="pyknot2.spacecurves.spacecurves.Knot.raw_crossings"><tt class="xref py py-meth docutils literal"><span class="pre">raw_crossings()</span></tt></a>,
+see the documentation of that function for all options.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.planar_writhe">
+<tt class="descname">planar_writhe</tt><big>(</big><em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.planar_writhe" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the current planar writhe of the knot; the signed sum
+of crossings of the current projection.</p>
+<p>The &#8216;true&#8217; writhe is the average of this quantity over all
+projection directions, and is available from the <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.writhe" title="pyknot2.spacecurves.spacecurves.Knot.writhe"><tt class="xref py py-meth docutils literal"><span class="pre">writhe()</span></tt></a>
+method.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>**kwargs :</strong> :</p>
+<blockquote class="last">
+<div><p>These are passed directly to <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.raw_crossings" title="pyknot2.spacecurves.spacecurves.Knot.raw_crossings"><tt class="xref py py-meth docutils literal"><span class="pre">raw_crossings()</span></tt></a>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.plot">
+<tt class="descname">plot</tt><big>(</big><em>mode='mayavi'</em>, <em>clf=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots the line. See <a class="reference internal" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_line" title="pyknot2.visualise.plot_line"><tt class="xref py py-func docutils literal"><span class="pre">pyknot2.visualise.plot_line()</span></tt></a> for
+full documentation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.radius_of_gyration">
+<tt class="descname">radius_of_gyration</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.radius_of_gyration" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the radius of gyration of the points of self,
+assuming each has equal weight and ignoring the connecting
+lines.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.raw_crossings">
+<tt class="descname">raw_crossings</tt><big>(</big><em>mode='use_max_jump'</em>, <em>include_closure=True</em>, <em>recalculate=False</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.raw_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the crossings in the diagram of the projection of the
+space curve into its z=0 plane.</p>
+<p>The crossings will be calculated the first time this function
+is called, then cached until an operation that would change
+the list (e.g. rotation, or changing <tt class="docutils literal"><span class="pre">self.points</span></tt>).</p>
+<p>Multiple modes are available (see parameters) - you should be
+aware of this because different modes may be vastly slower or
+faster depending on the type of line.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mode</strong> : str, optional</p>
+<blockquote>
+<div><p>One of <tt class="docutils literal"><span class="pre">'count_every_jump'</span></tt> and <tt class="docutils literal"><span class="pre">'use_max_jump'</span></tt>. In the former
+case,
+walking along the line uses information about the length of
+every step. In the latter, it guesses that all steps have the
+same length as the maximum step length. The optimal choice
+depends on the data, but is usually <tt class="docutils literal"><span class="pre">'use_max_jump'</span></tt>, which
+is the default.</p>
+</div></blockquote>
+<p><strong>include_closure</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to include crossings with the
+line joining the start and end points. Defaults to True.</p>
+</div></blockquote>
+<p><strong>recalculate</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to force a recalculation of the crossing positions.
+Defaults to False.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>array-like</strong> :</p>
+<blockquote class="last">
+<div><p>The raw array of floats representing crossings, of the
+form [[line_index, other_index, +-1, +-1], ...], where the
+line_index and other_index are in arclength parameterised
+by integers for each vertex and linearly interpolated,
+and the +-1 represent over/under and clockwise/anticlockwise
+respectively.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.reparameterised">
+<tt class="descname">reparameterised</tt><big>(</big><em>mode='arclength'</em>, <em>num_points=None</em>, <em>interpolation='linear'</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.reparameterised" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a new <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot" title="pyknot2.spacecurves.spacecurves.Knot"><tt class="xref py py-class docutils literal"><span class="pre">Knot</span></tt></a> where new points have been selected
+by interpolating the current ones.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This doesn&#8217;t do what you expect! The new segments
+will probably not all be separated by the right amount
+in terms of the new parameterisation.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mode</strong> : str</p>
+<blockquote>
+<div><p>The function to reparameterise by. Defaults to &#8216;arclength&#8217;,
+which is currently the only option.</p>
+</div></blockquote>
+<p><strong>num_points</strong> : int</p>
+<blockquote>
+<div><p>The number of points in the new parameterisation. Defaults
+to None, which means the same as the current number.</p>
+</div></blockquote>
+<p><strong>interpolation</strong> : str</p>
+<blockquote class="last">
+<div><p>The type of interpolation to use, passed directly to the
+<tt class="docutils literal"><span class="pre">kind</span></tt> option of <tt class="docutils literal"><span class="pre">scipy.interpolate.interp1d</span></tt>. Defaults
+to &#8216;linear&#8217;, and other options have not been tested.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.rotate">
+<tt class="descname">rotate</tt><big>(</big><em>angles=None</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates all the points of self by the given angles in each axis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>angles</strong> : array-like</p>
+<blockquote class="last">
+<div><p>The rotation angles about x, y and z. If None, random
+angles are used. Defaults to None.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.segment_arclengths">
+<tt class="descname">segment_arclengths</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.segment_arclengths" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an array of arclengths of every step in the line
+defined by self.points.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.to_json">
+<tt class="descname">to_json</tt><big>(</big><em>filen</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.to_json" title="Permalink to this definition">¶</a></dt>
+<dd><p>Writes the knot points to the given filename, in a json format
+that can be read later by <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.from_json" title="pyknot2.spacecurves.spacecurves.Knot.from_json"><tt class="xref py py-meth docutils literal"><span class="pre">Knot.from_json()</span></tt></a>. Uses
+<a class="reference internal" href="../../apidoc_test/pyknot2.html#pyknot2.io.to_json_file" title="pyknot2.io.to_json_file"><tt class="xref py py-func docutils literal"><span class="pre">pyknot2.io.to_json_file()</span></tt></a> internally.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.translate">
+<tt class="descname">translate</tt><big>(</big><em>vector</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translates all the points of self by the given vector.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>vector</strong> (<em>array-like</em>) &#8211; The x, y, z translation distances</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.writhe">
+<tt class="descname">writhe</tt><big>(</big><em>samples=10</em>, <em>recalculate=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.writhe" title="Permalink to this definition">¶</a></dt>
+<dd><p>The (approximate) writhe of the space curve, obtained by averaging
+the planar writhe over the given number of directions.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples</strong> : int</p>
+<blockquote>
+<div><p>The number of directions to average over. Defaults to 10.</p>
+</div></blockquote>
+<p><strong>recalculate</strong> : bool</p>
+<blockquote>
+<div><p>Whether to recalculate the writhe.</p>
+</div></blockquote>
+<p><strong>**kwargs :</strong> :</p>
+<blockquote class="last">
+<div><p>These are passed directly to <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Knot.raw_crossings" title="pyknot2.spacecurves.spacecurves.Knot.raw_crossings"><tt class="xref py py-meth docutils literal"><span class="pre">raw_crossings()</span></tt></a>.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Knot.zero_centroid">
+<tt class="descname">zero_centroid</tt><big>(</big><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Knot.zero_centroid" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate such that the centroid (average position of vertices)
+is at (0, 0, 0).</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyknot2.spacecurves.spacecurves.Link">
+<em class="property">class </em><tt class="descclassname">pyknot2.spacecurves.spacecurves.</tt><tt class="descname">Link</tt><big>(</big><em>lines</em>, <em>verbose=True</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link" title="Permalink to this definition">¶</a></dt>
+<dd><p>Class for holding the vertices of multiple lines, providing helper
+methods for convenient manipulation and analysis.</p>
+<p>The data is stored
+internally as multiple <tt class="xref py py-class docutils literal"><span class="pre">Knots</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>lines</strong> : list of nx3 array-like or Knots</p>
+<blockquote>
+<div><p>List with the points of each line.</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote class="last">
+<div><p>Whether to print information during processing. Defaults
+to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Link.arclength">
+<tt class="descname">arclength</tt><big>(</big><em>include_closures=True</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.arclength" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the sum of arclengths of the lines.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>include_closures</strong> : bool</p>
+<blockquote class="last">
+<div><p>Whether to include the distance between the final and
+first points of each line. Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.spacecurves.spacecurves.Link.from_periodic_lines">
+<em class="property">classmethod </em><tt class="descname">from_periodic_lines</tt><big>(</big><em>lines</em>, <em>shape</em>, <em>perturb=True</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.from_periodic_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a <a class="reference internal" href="../../apidoc_test/pyknot2.spacecurves.html#pyknot2.spacecurves.spacecurves.Link" title="pyknot2.spacecurves.spacecurves.Link"><tt class="xref py py-class docutils literal"><span class="pre">Link</span></tt></a> instance in which the lines have
+been unwrapped through the periodic boundaries.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>line</strong> : list</p>
+<blockquote>
+<div><p>A list of the Nx3 vectors of points in the lines</p>
+</div></blockquote>
+<p><strong>shape</strong> : array-like</p>
+<blockquote>
+<div><p>The x, y, z distances of the periodic boundary</p>
+</div></blockquote>
+<p><strong>perturb</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True, translates and rotates the knot to avoid any lattice
+problems.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Link.octree_simplify">
+<tt class="descname">octree_simplify</tt><big>(</big><em>runs=1</em>, <em>plot=False</em>, <em>rotate=True</em>, <em>obey_knotting=False</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.octree_simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Simplifies the curves via the octree reduction of
+<a href="#id3"><span class="problematic" id="id4">:module:`pyknot2.simplify.octree`</span></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>runs</strong> : int</p>
+<blockquote>
+<div><p>The number of times to run the octree simplification.
+Defaults to 1.</p>
+</div></blockquote>
+<p><strong>plot</strong> : bool</p>
+<blockquote>
+<div><p>Whether to plot the curve after each run. Defaults to False.</p>
+</div></blockquote>
+<p><strong>rotate</strong> : bool</p>
+<blockquote>
+<div><p>Whether to rotate the space curve before each run. Defaults
+to True as this can make things much faster.</p>
+</div></blockquote>
+<p><strong>obey_knotting</strong> : bool</p>
+<blockquote>
+<div><p>Whether to not let the line pass through itself. Defaults to
+False - knotting of individual components will be ignored!
+This is <em>much</em> faster than the alternative.</p>
+</div></blockquote>
+<p><strong>kwargs are passed to the :class:`pyknot2.simplify.octree.OctreeCell`</strong> :</p>
+<p class="last"><strong>constructor.</strong> :</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Link.plot">
+<tt class="descname">plot</tt><big>(</big><em>mode='mayavi'</em>, <em>clf=True</em>, <em>**kwargs</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.plot" title="Permalink to this definition">¶</a></dt>
+<dd><p>Plots all the lines. See <a class="reference internal" href="../../apidoc_test/pyknot2.html#pyknot2.visualise.plot_line" title="pyknot2.visualise.plot_line"><tt class="xref py py-func docutils literal"><span class="pre">pyknot2.visualise.plot_line()</span></tt></a> for
+full documentation.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Link.raw_crossings">
+<tt class="descname">raw_crossings</tt><big>(</big><em>mode='use_max_jump'</em>, <em>only_with_other_lines=True</em>, <em>include_closures=True</em>, <em>recalculate=False</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.raw_crossings" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the crossings in the diagram of the projection of the
+space curve into its z=0 plane.</p>
+<p>The crossings will be calculated the first time this function
+is called, then cached until an operation that would change
+the list (e.g. rotation, or changing <tt class="docutils literal"><span class="pre">self.points</span></tt>).</p>
+<p>Multiple modes are available (see parameters) - you should be
+aware of this because different modes may be vastly slower or
+faster depending on the type of line.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>mode</strong> : str, optional</p>
+<blockquote>
+<div><p>One of <tt class="docutils literal"><span class="pre">'count_every_jump'</span></tt> and <tt class="docutils literal"><span class="pre">'use_max_jump'</span></tt>. In the former
+case,
+walking along the line uses information about the length of
+every step. In the latter, it guesses that all steps have the
+same length as the maximum step length. The optimal choice
+depends on the data, but is usually <tt class="docutils literal"><span class="pre">'use_max_jump'</span></tt>, which
+is the default.</p>
+</div></blockquote>
+<p><strong>only_with_other_lines</strong> : bool</p>
+<blockquote>
+<div><p>If True, ignores self-crossings (i.e. the knot type of the loops)
+and returns only a list of crossings between the loops. Defaults
+to True</p>
+</div></blockquote>
+<p><strong>include_closures</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to include crossings with the
+lines joining their start and end points. Defaults to True.</p>
+</div></blockquote>
+<p><strong>recalculate</strong> : bool, optional</p>
+<blockquote>
+<div><p>Whether to force a recalculation of the crossing positions.
+Defaults to False.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first"><strong>array-like</strong> :</p>
+<blockquote class="last">
+<div><p>The raw array of floats representing crossings, of the
+form [[line_index, other_index, +-1, +-1], ...], where the
+line_index and other_index are in arclength parameterised
+by integers for each vertex and linearly interpolated,
+and the +-1 represent over/under and clockwise/anticlockwise
+respectively.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Link.rotate">
+<tt class="descname">rotate</tt><big>(</big><em>angles=None</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.rotate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rotates all the points of each line of self by the given angle
+in each axis.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>angles</strong> : array-like</p>
+<blockquote class="last">
+<div><p>Rotation angles about x, y and z axes. If None, random angles
+are used. Defaults to None.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.spacecurves.spacecurves.Link.translate">
+<tt class="descname">translate</tt><big>(</big><em>vector</em><big>)</big><a class="headerlink" href="#pyknot2.spacecurves.spacecurves.Link.translate" title="Permalink to this definition">¶</a></dt>
+<dd><p>Translate all points in all lines of self.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>vector</strong> : array-like</p>
+<blockquote class="last">
+<div><p>The x, y, z translation distances</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="../representations/gausscode.html" class="btn btn-neutral float-right" title="Gauss code">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="../../index.html" class="btn btn-neutral" title="pyknot2"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

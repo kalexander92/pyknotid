@@ -1,0 +1,916 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.invariants &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../index.html"/>
+        <link rel="up" title="Module code" href="../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.invariants</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.invariants</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Invariants</span>
+<span class="sd">==========</span>
+
+<span class="sd">Functions for retrieving invariants of knots and links.</span>
+
+<span class="sd">Functions whose name ends with ``_mathematica`` try to create an</span>
+<span class="sd">external Mathematica process to calculate the answer. They may hang</span>
+<span class="sd">or have other problems if Mathematica isn&#39;t available in your</span>
+<span class="sd">``$PATH``, so be careful using them.</span>
+
+<span class="sd">.. warning:: This module may be broken into multiple components at</span>
+<span class="sd">             some point.</span>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="kn">from</span> <span class="nn">__future__</span> <span class="kn">import</span> <span class="n">print_function</span>
+<span class="kn">import</span> <span class="nn">subprocess</span>
+<span class="kn">import</span> <span class="nn">re</span>
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sym</span>
+
+
+<div class="viewcode-block" id="alexander"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.alexander">[docs]</a><span class="k">def</span> <span class="nf">alexander</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">variable</span><span class="o">=-</span><span class="mi">1</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;lr&#39;</span><span class="p">,</span> <span class="n">simplify</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span>
+              <span class="n">mode</span><span class="o">=</span><span class="s">&#39;python&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Calculates the Alexander polynomial of the given knot. The</span>
+<span class="sd">    representation *must* have just one knot component, or the calculation</span>
+<span class="sd">    will fail or potentially give bad results.</span>
+
+<span class="sd">    The result is returned with whatever numerical precision the</span>
+<span class="sd">    algorithm produces, it is not rounded.</span>
+
+<span class="sd">    The given representation *must* be simplified (RM1 performed if</span>
+<span class="sd">    possible) for this to work, otherwise the matrix has overlapping</span>
+<span class="sd">    elements. This is so important that this function automatically</span>
+<span class="sd">    calls :meth:`pyknot2.representations.gausscode.GaussCode.simplify`,</span>
+<span class="sd">    you must disable this manually if you don&#39;t want to do it.</span>
+
+<span class="sd">    .. note:: If &#39;maxima&#39; or &#39;mathematica&#39; is chosen as the mode, the</span>
+<span class="sd">              variable will automatically be set to ``t``.</span>
+
+<span class="sd">    .. note:: If the mode is &#39;cypari&#39;, the quadrant argument will be</span>
+<span class="sd">              ignored and the upper-left quadrant always used.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    representation : Anything convertible to a</span>
+<span class="sd">                     :class:`~pyknot2.representations.gausscode.GaussCode`</span>
+<span class="sd">        A pyknot2 representation class for the knot, or anything that</span>
+<span class="sd">        can automatically be converted into a GaussCode (i.e. by writing</span>
+<span class="sd">        :code:`GaussCode(your_object)`).</span>
+<span class="sd">    variable : float or complex or sympy variable</span>
+<span class="sd">        The value to caltulate the Alexander polynomial at. Defaults to -1,</span>
+<span class="sd">        but may be switched to the sympy variable ``t`` in the future.</span>
+<span class="sd">        Supports int/float/complex types (fast, works for thousands of</span>
+<span class="sd">        crossings) or sympy</span>
+<span class="sd">        expressions (much slower, works mostly only for &lt;100 crossings).</span>
+<span class="sd">    quadrant : str</span>
+<span class="sd">        Determines what principal minor of the Alexander matrix should be</span>
+<span class="sd">        used in the calculation; all choices *should* give the same answer.</span>
+<span class="sd">        Must be &#39;lr&#39;, &#39;ur&#39;, &#39;ul&#39; or &#39;ll&#39; for lower-right, upper-right,</span>
+<span class="sd">        upper-left or lower-left respectively.</span>
+<span class="sd">    simplify : bool</span>
+<span class="sd">        Whether to call the GaussCode simplify method, defaults to True.</span>
+<span class="sd">    mode : string</span>
+<span class="sd">        One of &#39;python&#39;, &#39;maxima&#39;, &#39;cypari&#39; or &#39;mathematica&#39;. This</span>
+<span class="sd">        denotes what</span>
+<span class="sd">        tools to use; if python, the calculation is performed with</span>
+<span class="sd">        numpy or sympy as appropriate. If maxima or mathematica, that</span>
+<span class="sd">        program is called by the function - this will only work if the</span>
+<span class="sd">        external tool is installed and available. Defaults to python.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="kn">from</span> <span class="nn">.representations.gausscode</span> <span class="kn">import</span> <span class="n">GaussCode</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">GaussCode</span><span class="p">):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">GaussCode</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">simplify</span><span class="p">:</span>
+        <span class="n">representation</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">one</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">two</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">one_extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">code_list</span> <span class="o">=</span> <span class="n">representation</span><span class="o">.</span><span class="n">_gauss_code</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">code_list</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">code_list</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;tried to calculate alexander polynomial&#39;</span>
+                        <span class="s">&#39;for something with more than 1 component&#39;</span><span class="p">)</span>
+
+    <span class="n">crossings</span> <span class="o">=</span> <span class="n">code_list</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">crossings</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="ow">not</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;lr&#39;</span><span class="p">,</span> <span class="s">&#39;ur&#39;</span><span class="p">,</span> <span class="s">&#39;ul&#39;</span><span class="p">,</span> <span class="s">&#39;ll&#39;</span><span class="p">]:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;invalid quadrant&#39;</span><span class="p">)</span>
+
+    <span class="n">mode</span> <span class="o">=</span> <span class="n">mode</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+    <span class="k">if</span> <span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;maxima&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">alexander_maxima</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">quadrant</span><span class="p">,</span>
+                                <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">simplify</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;cypari&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">alexander_cypari</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">quadrant</span><span class="p">,</span>
+                                <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                                <span class="n">simplify</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+    <span class="k">elif</span> <span class="n">mode</span> <span class="o">==</span> <span class="s">&#39;mathematica&#39;</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">alexander_mathematica</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">quadrant</span><span class="p">,</span>
+                                     <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">)</span>
+                                     
+
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="p">(</span><span class="nb">int</span><span class="p">,</span> <span class="nb">float</span><span class="p">,</span> <span class="nb">complex</span><span class="p">)):</span>
+        <span class="k">return</span> <span class="n">_alexander_numpy</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">quadrant</span><span class="p">)</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">_alexander_sympy</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">variable</span><span class="p">,</span> <span class="n">quadrant</span><span class="p">)</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_alexander_numpy</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">variable</span><span class="o">=-</span><span class="mf">1.0</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;lr&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Numpy implementation of the Alexander polynomial (evaluated</span>
+<span class="sd">    at a float), assuming the input has been sanitised by</span>
+<span class="sd">    :func:`alexander`.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">import</span> <span class="nn">numpy</span> <span class="kn">as</span> <span class="nn">n</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">crossings</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">dtype</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">complex</span> <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">variable</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">complex</span><span class="p">)</span> <span class="k">else</span> <span class="n">n</span><span class="o">.</span><span class="n">float</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_crossings</span><span class="p">,</span> <span class="n">num_crossings</span><span class="p">),</span> <span class="n">dtype</span><span class="o">=</span><span class="n">dtype</span><span class="p">)</span>
+    <span class="n">line_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_num_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">over_clock</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">-</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">variable</span>
+    <span class="n">under_clock_after</span> <span class="o">=</span> <span class="mf">1.</span> <span class="o">/</span> <span class="n">variable</span>
+    <span class="n">over_aclock</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">variable</span>
+    <span class="n">under_aclock_after</span> <span class="o">=</span> <span class="n">variable</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">crossings</span><span class="p">)):</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">over</span><span class="p">,</span> <span class="n">clockwise</span> <span class="o">=</span> <span class="n">crossings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">crossing_dict</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">crossing_exists</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_num_counter</span>
+            <span class="n">crossing_num_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">crossing_dict</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">crossing_num</span>
+        <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">over</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+            <span class="n">mat_elt</span> <span class="o">=</span> <span class="n">over_clock</span> <span class="k">if</span> <span class="n">clockwise</span> <span class="o">&gt;</span> <span class="mf">0.999</span> <span class="k">else</span> <span class="n">over_aclock</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat_elt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_mat_elt</span> <span class="o">=</span> <span class="p">(</span><span class="n">under_clock_after</span> <span class="k">if</span> <span class="n">clockwise</span> <span class="o">&gt;</span> <span class="mf">0.999</span> <span class="k">else</span>
+                           <span class="n">under_aclock_after</span><span class="p">)</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">line_num</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_mat_elt</span>
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;lr&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:])</span>
+    <span class="k">elif</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ur&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">matrix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:])</span>
+    <span class="k">elif</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ul&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">matrix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">elif</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ll&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">linalg</span><span class="o">.</span><span class="n">det</span><span class="p">(</span><span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">])</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">poly_val</span><span class="p">,</span> <span class="n">n</span><span class="o">.</span><span class="n">complex</span><span class="p">):</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">n</span><span class="o">.</span><span class="n">abs</span><span class="p">(</span><span class="n">poly_val</span><span class="p">)</span>
+    <span class="k">return</span> <span class="n">poly_val</span>
+
+
+<span class="k">def</span> <span class="nf">_alexander_sympy</span><span class="p">(</span><span class="n">crossings</span><span class="p">,</span> <span class="n">variable</span><span class="o">=</span><span class="bp">None</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;lr&#39;</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Sympy implementation of the Alexander polynomial, evaluated</span>
+<span class="sd">    with the variable replaced by some sympy expression.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="c"># This is almost the same as the numpy implementation...they should</span>
+    <span class="c"># probably be merged.</span>
+    <span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sym</span>
+    <span class="k">if</span> <span class="n">variable</span> <span class="ow">is</span> <span class="bp">None</span><span class="p">:</span>
+        <span class="n">variable</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">crossings</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">matrix</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">zeros</span><span class="p">((</span><span class="n">num_crossings</span><span class="p">,</span> <span class="n">num_crossings</span><span class="p">))</span>
+    <span class="n">line_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_num_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+    <span class="n">over_clock</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">variable</span>
+    <span class="n">under_clock_after</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">/</span> <span class="n">variable</span>
+    <span class="n">over_aclock</span> <span class="o">=</span> <span class="mi">1</span> <span class="o">-</span> <span class="n">variable</span>
+    <span class="n">under_aclock_after</span> <span class="o">=</span> <span class="n">variable</span>
+
+    <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="nb">len</span><span class="p">(</span><span class="n">crossings</span><span class="p">)):</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">over</span><span class="p">,</span> <span class="n">clockwise</span> <span class="o">=</span> <span class="n">crossings</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
+        <span class="k">if</span> <span class="n">identifier</span> <span class="ow">in</span> <span class="n">crossing_dict</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">identifier</span><span class="p">)</span>
+            <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">crossing_exists</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_num_counter</span>
+            <span class="n">crossing_num_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">crossing_dict</span><span class="p">[</span><span class="n">identifier</span><span class="p">]</span> <span class="o">=</span> <span class="n">crossing_num</span>
+        <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">over</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+            <span class="n">mat_elt</span> <span class="o">=</span> <span class="n">over_clock</span> <span class="k">if</span> <span class="n">clockwise</span> <span class="o">&gt;</span> <span class="mf">0.999</span> <span class="k">else</span> <span class="n">over_aclock</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">]</span> <span class="o">=</span> <span class="n">mat_elt</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">new_mat_elt</span> <span class="o">=</span> <span class="p">(</span><span class="n">under_clock_after</span> <span class="k">if</span> <span class="n">clockwise</span> <span class="o">&gt;</span> <span class="mf">0.999</span> <span class="k">else</span>
+                           <span class="n">under_aclock_after</span><span class="p">)</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">]</span> <span class="o">=</span> <span class="o">-</span><span class="mi">1</span>
+            <span class="n">line_num</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">matrix</span><span class="p">[</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">]</span> <span class="o">=</span> <span class="n">new_mat_elt</span>
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;lr&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ur&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="mi">1</span><span class="p">:]</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ul&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[:</span><span class="o">-</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+    <span class="k">elif</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ll&#39;</span><span class="p">:</span>
+        <span class="n">poly_val</span> <span class="o">=</span> <span class="n">matrix</span><span class="p">[</span><span class="mi">1</span><span class="p">:,</span> <span class="p">:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span><span class="o">.</span><span class="n">det</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">poly_val</span>
+
+
+<div class="viewcode-block" id="alexander_maxima"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.alexander_maxima">[docs]</a><span class="k">def</span> <span class="nf">alexander_maxima</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;ul&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                     <span class="n">simplify</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the Alexander polynomial of the given representation, by</span>
+<span class="sd">    calculating the matrix determinant in maxima.</span>
+
+<span class="sd">    The function only supports evaluating at the variable ``t``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    representation : Anything convertible to a</span>
+<span class="sd">                     :class:`~pyknot2.representations.gausscode.GaussCode`</span>
+<span class="sd">        A pyknot2 representation class for the knot, or anything that</span>
+<span class="sd">        can automatically be converted into a GaussCode (i.e. by writing</span>
+<span class="sd">        :code:`GaussCode(your_object)`).</span>
+<span class="sd">    quadrant : str</span>
+<span class="sd">        Determines what principal minor of the Alexander matrix should be</span>
+<span class="sd">        used in the calculation; all choices *should* give the same answer.</span>
+<span class="sd">        Must be &#39;lr&#39;, &#39;ur&#39;, &#39;ul&#39; or &#39;ll&#39; for lower-right, upper-right,</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether to print information about the procedure. Defaults to False.</span>
+<span class="sd">    simplify : bool</span>
+<span class="sd">        If True, tries to simplify the representation before calculating</span>
+<span class="sd">        the polynomial. Defaults to True.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="kn">from</span> <span class="nn">.representations.gausscode</span> <span class="kn">import</span> <span class="n">GaussCode</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">GaussCode</span><span class="p">):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">GaussCode</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">simplify</span><span class="p">:</span>
+        <span class="n">representation</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">one</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">two</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">one_extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">representation</span><span class="o">.</span><span class="n">_gauss_code</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;tried to calculate alexander polynomial&#39;</span>
+                        <span class="s">&#39;for something with more than 1 component&#39;</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">representation</span><span class="o">.</span><span class="n">_gauss_code</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="n">mat_mat</span> <span class="o">=</span> <span class="n">_maxima_matrix</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="n">quadrant</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="c">#&#39;sparse: true;\n&#39;,</span>
+                    <span class="s">&#39;ratmx: true;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+                    <span class="s">&#39;display2d: false;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">,</span>
+                    <span class="n">mat_mat</span><span class="p">,</span>
+                    <span class="s">&#39;expand(determinant(m2));&#39;</span><span class="p">])</span>
+
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="s">&#39;maxima_batch.maxima&#39;</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fileh</span><span class="p">:</span>
+        <span class="n">fileh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">code</span><span class="p">)</span>
+
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">(</span>
+        <span class="p">[</span><span class="s">&#39;maxima&#39;</span><span class="p">,</span> <span class="s">&#39;-b&#39;</span><span class="p">,</span> <span class="s">&#39;maxima_batch.maxima&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">3</span><span class="p">][</span><span class="mi">6</span><span class="p">:]</span>
+
+    <span class="n">t</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;^&#39;</span><span class="p">,</span> <span class="s">&#39;**&#39;</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="alexander_cypari"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.alexander_cypari">[docs]</a><span class="k">def</span> <span class="nf">alexander_cypari</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;ul&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                     <span class="n">simplify</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the Alexander polynomial of the given representation, by</span>
+<span class="sd">    calculating the matrix determinant via cypari, a python interface</span>
+<span class="sd">    to Pari-GP.</span>
+
+<span class="sd">    The function only supports evaluating at the variable ``t``.</span>
+
+<span class="sd">    The returned object is a cypari query type.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    representation : Anything convertible to a</span>
+<span class="sd">                     :class:`~pyknot2.representations.gausscode.GaussCode`</span>
+<span class="sd">        A pyknot2 representation class for the knot, or anything that</span>
+<span class="sd">        can automatically be converted into a GaussCode (i.e. by writing</span>
+<span class="sd">        :code:`GaussCode(your_object)`).</span>
+<span class="sd">    quadrant : str</span>
+<span class="sd">        Determines what principal minor of the Alexander matrix should be</span>
+<span class="sd">        used in the calculation; all choices *should* give the same answer.</span>
+<span class="sd">        Must be &#39;lr&#39;, &#39;ur&#39;, &#39;ul&#39; or &#39;ll&#39; for lower-right, upper-right,</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether to print information about the procedure. Defaults to False.</span>
+<span class="sd">    simplify : bool</span>
+<span class="sd">        If True, tries to simplify the representation before calculating</span>
+<span class="sd">        the polynomial. Defaults to True.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="kn">from</span> <span class="nn">.representations.gausscode</span> <span class="kn">import</span> <span class="n">GaussCode</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">GaussCode</span><span class="p">):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">GaussCode</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">simplify</span><span class="p">:</span>
+        <span class="n">representation</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">one</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">two</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">one_extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">representation</span><span class="o">.</span><span class="n">_gauss_code</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;tried to calculate alexander polynomial&#39;</span>
+                        <span class="s">&#39;for something with more than 1 component&#39;</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">representation</span><span class="o">.</span><span class="n">_gauss_code</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+
+    <span class="n">mat_mat</span> <span class="o">=</span> <span class="n">_cypari_matrix</span><span class="p">(</span><span class="n">code</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="n">quadrant</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+
+    <span class="k">return</span> <span class="n">mat_mat</span><span class="o">.</span><span class="n">matdet</span><span class="p">()</span>
+
+
+                    </div>
+<div class="viewcode-block" id="alexander_mathematica"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.alexander_mathematica">[docs]</a><span class="k">def</span> <span class="nf">alexander_mathematica</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;ul&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span>
+                          <span class="n">via_file</span><span class="o">=</span><span class="bp">True</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the Alexander polynomial of the given representation, by</span>
+<span class="sd">    creating a Mathematica process and running its knot routines.</span>
+<span class="sd">    The Mathematica installation must include the KnotTheory package.</span>
+
+<span class="sd">    The function only supports evaluating at the variable ``t``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    representation : Anything convertible to a</span>
+<span class="sd">                     :class:`~pyknot2.representations.gausscode.GaussCode`</span>
+<span class="sd">        A pyknot2 representation class for the knot, or anything that</span>
+<span class="sd">        can automatically be converted into a GaussCode (i.e. by writing</span>
+<span class="sd">        :code:`GaussCode(your_object)`).</span>
+<span class="sd">    quadrant : str</span>
+<span class="sd">        Determines what principal minor of the Alexander matrix should be</span>
+<span class="sd">        used in the calculation; all choices *should* give the same answer.</span>
+<span class="sd">        Must be &#39;lr&#39;, &#39;ur&#39;, &#39;ul&#39; or &#39;ll&#39; for lower-right, upper-right,</span>
+<span class="sd">    verbose : bool</span>
+<span class="sd">        Whether to print information about the procedure. Defaults to False.</span>
+<span class="sd">    via_file : bool</span>
+<span class="sd">        If True, calls Mathematica via a written file ``mathematicascript.m``,</span>
+<span class="sd">        otherwise calls Mathematica directly with ``runMath``. The latter</span>
+<span class="sd">        had a nasty bug in at least one recent Mathematica version, so the</span>
+<span class="sd">        default is to True.</span>
+<span class="sd">    simplify : bool</span>
+<span class="sd">        If True, tries to simplify the representation before calculating</span>
+<span class="sd">        the polynomial. Defaults to True.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">.representations.gausscode</span> <span class="kn">import</span> <span class="n">GaussCode</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">GaussCode</span><span class="p">):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">GaussCode</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">simplify</span><span class="p">:</span>
+        <span class="n">representation</span><span class="o">.</span><span class="n">simplify</span><span class="p">(</span><span class="n">one</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">two</span><span class="o">=</span><span class="bp">True</span><span class="p">,</span> <span class="n">one_extended</span><span class="o">=</span><span class="bp">True</span><span class="p">)</span>
+
+    <span class="n">code</span> <span class="o">=</span> <span class="n">representation</span><span class="o">.</span><span class="n">_gauss_code</span>
+
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="mi">1</span>
+    <span class="k">elif</span> <span class="nb">len</span><span class="p">(</span><span class="n">code</span><span class="p">)</span> <span class="o">&gt;</span> <span class="mi">1</span><span class="p">:</span>
+        <span class="k">raise</span> <span class="ne">Exception</span><span class="p">(</span><span class="s">&#39;tried to calculate alexander polynomial&#39;</span>
+                        <span class="s">&#39;for something with more than 1 component&#39;</span><span class="p">)</span>
+    <span class="n">mat_mat</span> <span class="o">=</span> <span class="n">_mathematica_matrix</span><span class="p">(</span><span class="n">code</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">quadrant</span><span class="o">=</span><span class="n">quadrant</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="n">verbose</span><span class="p">)</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="n">via_file</span><span class="p">:</span>
+        <span class="n">det</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s">&#39;runMath&#39;</span><span class="p">,</span> <span class="s">&#39;Det[&#39;</span> <span class="o">+</span> <span class="n">mat_mat</span> <span class="o">+</span> <span class="s">&#39;]&#39;</span><span class="p">])[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="n">_write_mathematica_script</span><span class="p">(</span><span class="s">&#39;mathematicascript.m&#39;</span><span class="p">,</span> <span class="s">&#39;Print[Det[&#39;</span> <span class="o">+</span>
+                                  <span class="n">mat_mat</span> <span class="o">+</span> <span class="s">&#39;]]&#39;</span><span class="p">)</span>
+        <span class="n">det</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s">&#39;bash&#39;</span><span class="p">,</span> <span class="s">&#39;mathematicascript.m&#39;</span><span class="p">])</span>
+    <span class="n">t</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;t&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">det</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;^&#39;</span><span class="p">,</span> <span class="s">&#39;**&#39;</span><span class="p">))</span>
+
+</div>
+<div class="viewcode-block" id="jones_mathematica"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.jones_mathematica">[docs]</a><span class="k">def</span> <span class="nf">jones_mathematica</span><span class="p">(</span><span class="n">representation</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Returns the Jones polynomial of the given representation, by</span>
+<span class="sd">    creating a Mathematica process and running its knot routines.</span>
+<span class="sd">    The Mathematica installation must include the KnotTheory package.</span>
+
+<span class="sd">    The function only supports evaluating at the variable ``q``.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    representation : A PlanarDiagram, or anything convertible to a</span>
+<span class="sd">                     :class:`~pyknot2.representations.gausscode.GaussCode`</span>
+<span class="sd">        A pyknot2 representation class for the knot, or anything that</span>
+<span class="sd">        can automatically be converted into a GaussCode (i.e. by writing</span>
+<span class="sd">        :code:`GaussCode(your_object)`), or a PlanarDiagram.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">.representations.gausscode</span> <span class="kn">import</span> <span class="n">GaussCode</span>
+    <span class="kn">from</span> <span class="nn">.representations.planardiagram</span> <span class="kn">import</span> <span class="n">PlanarDiagram</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="p">(</span><span class="n">GaussCode</span><span class="p">,</span> <span class="n">PlanarDiagram</span><span class="p">)):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">GaussCode</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">GaussCode</span><span class="p">):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">PlanarDiagram</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+
+    <span class="n">mathematica_code</span> <span class="o">=</span> <span class="n">representation</span><span class="o">.</span><span class="n">as_mathematica</span><span class="p">()</span>
+    <span class="n">_write_mathematica_script</span><span class="p">(</span><span class="s">&#39;jonesscript.m&#39;</span><span class="p">,</span>
+                              <span class="s">&#39;&lt;&lt; KnotTheory`</span><span class="se">\n</span><span class="s">Print[Jones[&#39;</span> <span class="o">+</span>
+                              <span class="n">mathematica_code</span> <span class="o">+</span> <span class="s">&#39;][q]]&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">subprocess</span><span class="o">.</span><span class="n">check_output</span><span class="p">([</span><span class="s">&#39;bash&#39;</span><span class="p">,</span> <span class="s">&#39;jonesscript.m&#39;</span><span class="p">])</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)[</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">q</span> <span class="o">=</span> <span class="n">sym</span><span class="o">.</span><span class="n">var</span><span class="p">(</span><span class="s">&#39;q&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;[&#39;</span><span class="p">,</span> <span class="s">&#39;(&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;]&#39;</span><span class="p">,</span> <span class="s">&#39;)&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;Sqrt&#39;</span><span class="p">,</span> <span class="s">&#39;sym.sqrt&#39;</span><span class="p">)</span>
+    <span class="n">r</span> <span class="o">=</span> <span class="n">re</span><span class="o">.</span><span class="n">compile</span><span class="p">(</span><span class="s">&#39;([0-9]+)&#39;</span><span class="p">)</span>
+    <span class="n">result</span> <span class="o">=</span> <span class="n">r</span><span class="o">.</span><span class="n">sub</span><span class="p">(</span><span class="s">r&#39;sym.Integer(\1)&#39;</span><span class="p">,</span> <span class="n">result</span><span class="p">)</span>
+    <span class="k">return</span> <span class="nb">eval</span><span class="p">(</span><span class="n">result</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;^&#39;</span><span class="p">,</span> <span class="s">&#39;**&#39;</span><span class="p">))</span>
+
+</div>
+<span class="k">def</span> <span class="nf">_write_mathematica_script</span><span class="p">(</span><span class="n">filen</span><span class="p">,</span> <span class="n">text</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Write the given text (mathematica code) to the given filename. It will</span>
+<span class="sd">    be wrapped in some MathKernel calling stuff first.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">with</span> <span class="nb">open</span><span class="p">(</span><span class="n">filen</span><span class="p">,</span> <span class="s">&#39;w&#39;</span><span class="p">)</span> <span class="k">as</span> <span class="n">fileh</span><span class="p">:</span>
+        <span class="n">fileh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;MathKernel -noprompt -run &quot;commandLine={${1+</span><span class="se">\&quot;</span><span class="s">$1</span><span class="se">\&quot;</span><span class="s">}}; &#39;</span>
+                    <span class="s">&#39;$(sed </span><span class="se">\&#39;</span><span class="s">1,/^exit/d</span><span class="se">\&#39;</span><span class="s"> $0) ; Exit[]&quot;</span><span class="se">\n</span><span class="s">exit $?</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+        <span class="n">fileh</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="n">text</span><span class="p">)</span>
+        <span class="n">fileh</span><span class="o">.</span><span class="n">close</span><span class="p">()</span>
+
+
+<span class="k">def</span> <span class="nf">_mathematica_matrix</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;lr&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Turns the given crossings into a string of Mathematica code</span>
+<span class="sd">    representing the Alexander matrix.</span>
+
+<span class="sd">    This functions is for internal use only.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="p">[]</span>
+
+    <span class="n">line_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">crossing_num_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">written_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">crossing</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">i = {0} / {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)))</span>
+        <span class="k">print</span><span class="p">(</span><span class="s">&#39;crossing is&#39;</span><span class="p">,</span> <span class="n">crossing</span><span class="p">)</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">direc</span> <span class="o">=</span> <span class="n">crossing</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">crossing_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">identifier</span><span class="p">:</span>
+                <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_dict</span><span class="p">[</span><span class="n">entry</span><span class="p">]</span>
+                <span class="n">crossing_entry</span> <span class="o">=</span> <span class="n">entry</span>
+                <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">crossing_exists</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_num_counter</span>
+            <span class="n">crossing_num_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">crossing_dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">crossing</span><span class="p">)]</span> <span class="o">=</span> <span class="n">crossing_num</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crossing_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">crossing_entry</span><span class="p">)</span>
+        <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">upper</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direc</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+                <span class="n">matrix_element</span> <span class="o">=</span> <span class="s">&#39;1-1/t&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">matrix_element</span> <span class="o">=</span> <span class="s">&#39;1-t&#39;</span>
+            <span class="n">mathmat_entries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                    <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">,</span>
+                                    <span class="n">matrix_element</span><span class="p">))</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direc</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+                <span class="n">new_matrix_element</span> <span class="o">=</span> <span class="s">&#39;1/t&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_matrix_element</span> <span class="o">=</span> <span class="s">&#39;t&#39;</span>
+            <span class="n">mathmat_entries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                    <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">,</span> <span class="s">&#39;-1&#39;</span><span class="p">))</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+            <span class="n">line_num</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">mathmat_entries</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                    <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">,</span>
+                                    <span class="n">new_matrix_element</span><span class="p">))</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;lr&#39;</span><span class="p">:</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">mathmat_entries</span><span class="p">)</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">mathmat_entries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ur&#39;</span><span class="p">:</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_crossings</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">,</span> <span class="n">mathmat_entries</span><span class="p">)</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">mathmat_entries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ul&#39;</span><span class="p">:</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_crossings</span><span class="o">-</span><span class="mi">1</span> <span class="ow">and</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_crossings</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">mathmat_entries</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">quadrant</span> <span class="o">==</span> <span class="s">&#39;ll&#39;</span><span class="p">:</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">filter</span><span class="p">(</span>
+            <span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">!=</span> <span class="mi">0</span> <span class="ow">and</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span> <span class="o">!=</span> <span class="n">num_crossings</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span>
+            <span class="n">mathmat_entries</span><span class="p">)</span>
+        <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="nb">map</span><span class="p">(</span><span class="k">lambda</span> <span class="n">j</span><span class="p">:</span> <span class="p">(</span><span class="n">j</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">-</span><span class="mi">1</span><span class="p">,</span> <span class="n">j</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">j</span><span class="p">[</span><span class="mi">2</span><span class="p">]),</span> <span class="n">mathmat_entries</span><span class="p">)</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span>
+    <span class="n">outstr</span> <span class="o">=</span> <span class="s">&#39;Sparse_array[{ &#39;</span>
+    <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">mathmat_entries</span><span class="p">:</span>
+        <span class="n">outstr</span> <span class="o">+=</span> <span class="s">&#39;{</span><span class="si">%d</span><span class="s">,</span><span class="si">%d</span><span class="s">}-&gt;</span><span class="si">%s</span><span class="s">, &#39;</span> <span class="o">%</span> <span class="p">(</span><span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">entry</span><span class="p">[</span><span class="mi">1</span><span class="p">]</span><span class="o">+</span><span class="mi">1</span><span class="p">,</span> <span class="n">entry</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+    <span class="n">outstr</span> <span class="o">=</span> <span class="n">outstr</span><span class="p">[:</span><span class="o">-</span><span class="mi">2</span><span class="p">]</span>
+    <span class="n">outstr</span> <span class="o">+=</span> <span class="s">&#39; }]&#39;</span>
+    <span class="k">return</span> <span class="n">outstr</span>
+
+
+<div class="viewcode-block" id="hyperbolic_volume"><a class="viewcode-back" href="../../apidoc_test/pyknot2.html#pyknot2.invariants.hyperbolic_volume">[docs]</a><span class="k">def</span> <span class="nf">hyperbolic_volume</span><span class="p">(</span><span class="n">representation</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    The hyperbolic volume, calculated by the SnapPy library for</span>
+<span class="sd">    studying the topology and geometry of 3-manifolds. This function</span>
+<span class="sd">    depends on the Spherogram module, distributed with SnapPy or</span>
+<span class="sd">    available separately.</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    representation : A PlanarDiagram, or anything convertible to a</span>
+<span class="sd">                     :class:`~pyknot2.representations.gausscode.GaussCode`</span>
+<span class="sd">        A pyknot2 representation class for the knot, or anything that</span>
+<span class="sd">        can automatically be converted into a GaussCode (i.e. by writing</span>
+<span class="sd">        :code:`GaussCode(your_object)`), or a PlanarDiagram.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="kn">from</span> <span class="nn">.representations.gausscode</span> <span class="kn">import</span> <span class="n">GaussCode</span>
+    <span class="kn">from</span> <span class="nn">.representations.planardiagram</span> <span class="kn">import</span> <span class="n">PlanarDiagram</span>
+    <span class="k">if</span> <span class="ow">not</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="p">(</span><span class="n">GaussCode</span><span class="p">,</span> <span class="n">PlanarDiagram</span><span class="p">)):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">GaussCode</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+    <span class="k">if</span> <span class="nb">isinstance</span><span class="p">(</span><span class="n">representation</span><span class="p">,</span> <span class="n">GaussCode</span><span class="p">):</span>
+        <span class="n">representation</span> <span class="o">=</span> <span class="n">PlanarDiagram</span><span class="p">(</span><span class="n">representation</span><span class="p">)</span>
+
+    <span class="n">volume</span> <span class="o">=</span> <span class="n">representation</span><span class="o">.</span><span class="n">as_spherogram</span><span class="p">()</span><span class="o">.</span><span class="n">exterior</span><span class="p">()</span><span class="o">.</span><span class="n">volume</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">volume</span>
+</div>
+<span class="k">def</span> <span class="nf">_maxima_matrix</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;lr&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Turns the given crossings into a string of maxima code</span>
+<span class="sd">    representing the Alexander matrix.</span>
+
+<span class="sd">    This functions is for internal use only.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">line_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">crossing_num_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">written_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">crossing</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">i = {0} / {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)))</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">direc</span> <span class="o">=</span> <span class="n">crossing</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">crossing_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">identifier</span><span class="p">:</span>
+                <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_dict</span><span class="p">[</span><span class="n">entry</span><span class="p">]</span>
+                <span class="n">crossing_entry</span> <span class="o">=</span> <span class="n">entry</span>
+                <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">crossing_exists</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_num_counter</span>
+            <span class="n">crossing_num_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">crossing_dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">crossing</span><span class="p">)]</span> <span class="o">=</span> <span class="n">crossing_num</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crossing_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">crossing_entry</span><span class="p">)</span>
+        <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">upper</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direc</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+                <span class="n">matrix_element</span> <span class="o">=</span> <span class="s">&#39;1-1/t&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">matrix_element</span> <span class="o">=</span> <span class="s">&#39;1-t&#39;</span>
+            <span class="n">mathmat_entries</span><span class="p">[</span>
+                <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)]</span> <span class="o">=</span>  <span class="n">matrix_element</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direc</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+                <span class="n">new_matrix_element</span> <span class="o">=</span> <span class="s">&#39;1/t&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_matrix_element</span> <span class="o">=</span> <span class="s">&#39;t&#39;</span>
+            <span class="n">mathmat_entries</span><span class="p">[(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)]</span> <span class="o">=</span>  <span class="s">&#39;-1&#39;</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+            <span class="n">line_num</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">mathmat_entries</span><span class="p">[</span>
+                <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_matrix_element</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span>
+    <span class="n">outstrs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;m: matrix(&#39;</span><span class="p">]</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_crossings</span><span class="p">):</span>
+        <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;[&#39;</span><span class="p">)</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_crossings</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span> <span class="ow">in</span> <span class="n">mathmat_entries</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">mathmat_entries</span><span class="p">[(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="s">&#39;0&#39;</span>
+            <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">)</span>
+        <span class="n">outstrs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;]&#39;</span><span class="p">)</span>
+        <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">)</span>
+    <span class="n">outstrs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;);</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+
+    <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span>
+        <span class="p">{</span><span class="s">&#39;lr&#39;</span><span class="p">:</span> <span class="s">&#39;m2: submatrix(1, m, 1)&#39;</span><span class="p">,</span>
+         <span class="s">&#39;ur&#39;</span><span class="p">:</span> <span class="s">&#39;m2: submatrix({nc}, m, 1)&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nc</span><span class="o">=</span><span class="n">num_crossings</span><span class="p">),</span>
+         <span class="s">&#39;ul&#39;</span><span class="p">:</span> <span class="s">&#39;m2: submatrix({nc}, m, {nc})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nc</span><span class="o">=</span><span class="n">num_crossings</span><span class="p">),</span>
+         <span class="s">&#39;ll&#39;</span><span class="p">:</span> <span class="s">&#39;m2: submatrix(1, m, {nc})&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">nc</span><span class="o">=</span><span class="n">num_crossings</span><span class="p">)</span>
+        <span class="p">}[</span><span class="n">quadrant</span><span class="p">])</span>
+
+    <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outstrs</span><span class="p">)</span>
+
+
+<span class="k">def</span> <span class="nf">_cypari_matrix</span><span class="p">(</span><span class="n">cs</span><span class="p">,</span> <span class="n">quadrant</span><span class="o">=</span><span class="s">&#39;lr&#39;</span><span class="p">,</span> <span class="n">verbose</span><span class="o">=</span><span class="bp">False</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">    Turns the given crossings into a string of maxima code</span>
+<span class="sd">    representing the Alexander matrix.</span>
+
+<span class="sd">    This functions is for internal use only.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="s">&#39;&#39;</span>
+    <span class="n">mathmat_entries</span> <span class="o">=</span> <span class="p">{}</span>
+
+    <span class="n">line_num</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span><span class="o">/</span><span class="mi">2</span>
+    <span class="n">crossing_num_counter</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="n">crossing_dict</span> <span class="o">=</span> <span class="p">{}</span>
+    <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">written_indices</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">i</span><span class="p">,</span> <span class="n">crossing</span> <span class="ow">in</span> <span class="nb">enumerate</span><span class="p">(</span><span class="n">cs</span><span class="p">):</span>
+        <span class="k">if</span> <span class="n">verbose</span> <span class="ow">and</span> <span class="p">(</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">)</span> <span class="o">%</span> <span class="mi">100</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">i = {0} / {1}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">i</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)))</span>
+        <span class="n">identifier</span><span class="p">,</span> <span class="n">upper</span><span class="p">,</span> <span class="n">direc</span> <span class="o">=</span> <span class="n">crossing</span>
+        <span class="k">for</span> <span class="n">entry</span> <span class="ow">in</span> <span class="n">crossing_dict</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">entry</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">==</span> <span class="n">identifier</span><span class="p">:</span>
+                <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_dict</span><span class="p">[</span><span class="n">entry</span><span class="p">]</span>
+                <span class="n">crossing_entry</span> <span class="o">=</span> <span class="n">entry</span>
+                <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">True</span>
+        <span class="k">if</span> <span class="ow">not</span> <span class="n">crossing_exists</span><span class="p">:</span>
+            <span class="n">crossing_num</span> <span class="o">=</span> <span class="n">crossing_num_counter</span>
+            <span class="n">crossing_num_counter</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">crossing_dict</span><span class="p">[</span><span class="nb">tuple</span><span class="p">(</span><span class="n">crossing</span><span class="p">)]</span> <span class="o">=</span> <span class="n">crossing_num</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crossing_dict</span><span class="o">.</span><span class="n">pop</span><span class="p">(</span><span class="n">crossing_entry</span><span class="p">)</span>
+        <span class="n">crossing_exists</span> <span class="o">=</span> <span class="bp">False</span>
+
+        <span class="k">if</span> <span class="n">upper</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direc</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+                <span class="n">matrix_element</span> <span class="o">=</span> <span class="s">&#39;1-1/t&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">matrix_element</span> <span class="o">=</span> <span class="s">&#39;1-t&#39;</span>
+            <span class="n">mathmat_entries</span><span class="p">[</span>
+                <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)]</span> <span class="o">=</span>  <span class="n">matrix_element</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="k">if</span> <span class="n">direc</span> <span class="o">&gt;</span> <span class="mf">0.99999</span><span class="p">:</span>
+                <span class="n">new_matrix_element</span> <span class="o">=</span> <span class="s">&#39;1/t&#39;</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">new_matrix_element</span> <span class="o">=</span> <span class="s">&#39;t&#39;</span>
+            <span class="n">mathmat_entries</span><span class="p">[(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)]</span> <span class="o">=</span>  <span class="s">&#39;-1&#39;</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+            <span class="n">line_num</span> <span class="o">+=</span> <span class="mi">1</span>
+            <span class="n">mathmat_entries</span><span class="p">[</span>
+                <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)]</span> <span class="o">=</span> <span class="n">new_matrix_element</span>
+            <span class="n">spec</span> <span class="o">=</span> <span class="p">(</span><span class="n">crossing_num</span><span class="p">,</span> <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">)</span>
+            <span class="k">if</span> <span class="n">spec</span> <span class="ow">in</span> <span class="n">written_indices</span><span class="p">:</span>
+                <span class="k">print</span><span class="p">(</span><span class="n">spec</span><span class="p">)</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">written_indices</span><span class="o">.</span><span class="n">append</span><span class="p">((</span><span class="n">crossing_num</span><span class="p">,</span>
+                                        <span class="n">line_num</span> <span class="o">%</span> <span class="n">num_crossings</span><span class="p">))</span>
+
+    <span class="k">if</span> <span class="n">verbose</span><span class="p">:</span>
+        <span class="k">print</span>
+
+    <span class="k">print</span><span class="p">(</span><span class="s">&#39;Warning: quadrant ignored!&#39;</span><span class="p">)</span>
+    
+    <span class="n">outstrs</span> <span class="o">=</span> <span class="p">[</span><span class="s">&#39;[&#39;</span><span class="p">]</span>
+    <span class="n">num_crossings</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">cs</span><span class="p">)</span> <span class="o">/</span> <span class="mi">2</span>
+    <span class="k">for</span> <span class="n">row</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_crossings</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+        <span class="k">for</span> <span class="n">column</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="n">num_crossings</span><span class="o">-</span><span class="mi">1</span><span class="p">):</span>
+            <span class="k">if</span> <span class="p">(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)</span> <span class="ow">in</span> <span class="n">mathmat_entries</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="n">mathmat_entries</span><span class="p">[(</span><span class="n">row</span><span class="p">,</span> <span class="n">column</span><span class="p">)]</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">value</span> <span class="o">=</span> <span class="s">&#39;0&#39;</span>
+            <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;, &#39;</span><span class="p">)</span>
+        <span class="n">outstrs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+        <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;;&#39;</span><span class="p">)</span>
+    <span class="n">outstrs</span><span class="o">.</span><span class="n">pop</span><span class="p">()</span>
+    <span class="n">outstrs</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="s">&#39;]&#39;</span><span class="p">)</span>
+
+    <span class="kn">from</span> <span class="nn">cypari.gen</span> <span class="kn">import</span> <span class="n">pari</span>
+    <span class="k">return</span> <span class="n">pari</span><span class="p">(</span><span class="s">&#39;&#39;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="n">outstrs</span><span class="p">))</span>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

@@ -1,0 +1,435 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>Invariants &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../index.html"/>
+        <link rel="next" title="Visualise" href="visualise.html"/>
+        <link rel="prev" title="Planar diagrams" href="representations/planardiagram.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>Invariants</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/api/invariants.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <span class="target" id="module-pyknot2.invariants"></span><div class="section" id="invariants">
+<h1>Invariants<a class="headerlink" href="#invariants" title="Permalink to this headline">¶</a></h1>
+<p>Functions for retrieving invariants of knots and links.</p>
+<p>Functions whose name ends with <tt class="docutils literal"><span class="pre">_mathematica</span></tt> try to create an
+external Mathematica process to calculate the answer. They may hang
+or have other problems if Mathematica isn&#8217;t available in your
+<tt class="docutils literal"><span class="pre">$PATH</span></tt>, so be careful using them.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">This module may be broken into multiple components at
+some point.</p>
+</div>
+<dl class="function">
+<dt id="pyknot2.invariants.alexander">
+<tt class="descclassname">pyknot2.invariants.</tt><tt class="descname">alexander</tt><big>(</big><em>representation</em>, <em>variable=-1</em>, <em>quadrant='lr'</em>, <em>simplify=True</em>, <em>mode='python'</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/invariants.html#alexander"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.invariants.alexander" title="Permalink to this definition">¶</a></dt>
+<dd><p>Calculates the Alexander polynomial of the given knot. The
+representation <em>must</em> have just one knot component, or the calculation
+will fail or potentially give bad results.</p>
+<p>The result is returned with whatever numerical precision the
+algorithm produces, it is not rounded.</p>
+<p>The given representation <em>must</em> be simplified (RM1 performed if
+possible) for this to work, otherwise the matrix has overlapping
+elements. This is so important that this function automatically
+calls <a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode.simplify" title="pyknot2.representations.gausscode.GaussCode.simplify"><tt class="xref py py-meth docutils literal"><span class="pre">pyknot2.representations.gausscode.GaussCode.simplify()</span></tt></a>,
+you must disable this manually if you don&#8217;t want to do it.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If &#8216;maxima&#8217; or &#8216;mathematica&#8217; is chosen as the mode, the
+variable will automatically be set to <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+</div>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">If the mode is &#8216;cypari&#8217;, the quadrant argument will be
+ignored and the upper-left quadrant always used.</p>
+</div>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>representation</strong> : Anything convertible to a</p>
+<blockquote>
+<div><blockquote>
+<div><p><a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a></p>
+</div></blockquote>
+<p>A pyknot2 representation class for the knot, or anything that
+can automatically be converted into a GaussCode (i.e. by writing
+<tt class="code docutils literal"><span class="pre">GaussCode(your_object)</span></tt>).</p>
+</div></blockquote>
+<p><strong>variable</strong> : float or complex or sympy variable</p>
+<blockquote>
+<div><p>The value to caltulate the Alexander polynomial at. Defaults to -1,
+but may be switched to the sympy variable <tt class="docutils literal"><span class="pre">t</span></tt> in the future.
+Supports int/float/complex types (fast, works for thousands of
+crossings) or sympy
+expressions (much slower, works mostly only for &lt;100 crossings).</p>
+</div></blockquote>
+<p><strong>quadrant</strong> : str</p>
+<blockquote>
+<div><p>Determines what principal minor of the Alexander matrix should be
+used in the calculation; all choices <em>should</em> give the same answer.
+Must be &#8216;lr&#8217;, &#8216;ur&#8217;, &#8216;ul&#8217; or &#8216;ll&#8217; for lower-right, upper-right,
+upper-left or lower-left respectively.</p>
+</div></blockquote>
+<p><strong>simplify</strong> : bool</p>
+<blockquote>
+<div><p>Whether to call the GaussCode simplify method, defaults to True.</p>
+</div></blockquote>
+<p><strong>mode</strong> : string</p>
+<blockquote class="last">
+<div><p>One of &#8216;python&#8217;, &#8216;maxima&#8217;, &#8216;cypari&#8217; or &#8216;mathematica&#8217;. This
+denotes what
+tools to use; if python, the calculation is performed with
+numpy or sympy as appropriate. If maxima or mathematica, that
+program is called by the function - this will only work if the
+external tool is installed and available. Defaults to python.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.invariants.alexander_cypari">
+<tt class="descclassname">pyknot2.invariants.</tt><tt class="descname">alexander_cypari</tt><big>(</big><em>representation</em>, <em>quadrant='ul'</em>, <em>verbose=False</em>, <em>simplify=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/invariants.html#alexander_cypari"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.invariants.alexander_cypari" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Alexander polynomial of the given representation, by
+calculating the matrix determinant via cypari, a python interface
+to Pari-GP.</p>
+<p>The function only supports evaluating at the variable <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+<p>The returned object is a cypari query type.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>representation</strong> : Anything convertible to a</p>
+<blockquote>
+<div><blockquote>
+<div><p><a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a></p>
+</div></blockquote>
+<p>A pyknot2 representation class for the knot, or anything that
+can automatically be converted into a GaussCode (i.e. by writing
+<tt class="code docutils literal"><span class="pre">GaussCode(your_object)</span></tt>).</p>
+</div></blockquote>
+<p><strong>quadrant</strong> : str</p>
+<blockquote>
+<div><p>Determines what principal minor of the Alexander matrix should be
+used in the calculation; all choices <em>should</em> give the same answer.
+Must be &#8216;lr&#8217;, &#8216;ur&#8217;, &#8216;ul&#8217; or &#8216;ll&#8217; for lower-right, upper-right,</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote>
+<div><p>Whether to print information about the procedure. Defaults to False.</p>
+</div></blockquote>
+<p><strong>simplify</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True, tries to simplify the representation before calculating
+the polynomial. Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.invariants.alexander_mathematica">
+<tt class="descclassname">pyknot2.invariants.</tt><tt class="descname">alexander_mathematica</tt><big>(</big><em>representation</em>, <em>quadrant='ul'</em>, <em>verbose=False</em>, <em>via_file=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/invariants.html#alexander_mathematica"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.invariants.alexander_mathematica" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Alexander polynomial of the given representation, by
+creating a Mathematica process and running its knot routines.
+The Mathematica installation must include the KnotTheory package.</p>
+<p>The function only supports evaluating at the variable <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>representation</strong> : Anything convertible to a</p>
+<blockquote>
+<div><blockquote>
+<div><p><a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a></p>
+</div></blockquote>
+<p>A pyknot2 representation class for the knot, or anything that
+can automatically be converted into a GaussCode (i.e. by writing
+<tt class="code docutils literal"><span class="pre">GaussCode(your_object)</span></tt>).</p>
+</div></blockquote>
+<p><strong>quadrant</strong> : str</p>
+<blockquote>
+<div><p>Determines what principal minor of the Alexander matrix should be
+used in the calculation; all choices <em>should</em> give the same answer.
+Must be &#8216;lr&#8217;, &#8216;ur&#8217;, &#8216;ul&#8217; or &#8216;ll&#8217; for lower-right, upper-right,</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote>
+<div><p>Whether to print information about the procedure. Defaults to False.</p>
+</div></blockquote>
+<p><strong>via_file</strong> : bool</p>
+<blockquote>
+<div><p>If True, calls Mathematica via a written file <tt class="docutils literal"><span class="pre">mathematicascript.m</span></tt>,
+otherwise calls Mathematica directly with <tt class="docutils literal"><span class="pre">runMath</span></tt>. The latter
+had a nasty bug in at least one recent Mathematica version, so the
+default is to True.</p>
+</div></blockquote>
+<p><strong>simplify</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True, tries to simplify the representation before calculating
+the polynomial. Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.invariants.alexander_maxima">
+<tt class="descclassname">pyknot2.invariants.</tt><tt class="descname">alexander_maxima</tt><big>(</big><em>representation</em>, <em>quadrant='ul'</em>, <em>verbose=False</em>, <em>simplify=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/invariants.html#alexander_maxima"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.invariants.alexander_maxima" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Alexander polynomial of the given representation, by
+calculating the matrix determinant in maxima.</p>
+<p>The function only supports evaluating at the variable <tt class="docutils literal"><span class="pre">t</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>representation</strong> : Anything convertible to a</p>
+<blockquote>
+<div><blockquote>
+<div><p><a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a></p>
+</div></blockquote>
+<p>A pyknot2 representation class for the knot, or anything that
+can automatically be converted into a GaussCode (i.e. by writing
+<tt class="code docutils literal"><span class="pre">GaussCode(your_object)</span></tt>).</p>
+</div></blockquote>
+<p><strong>quadrant</strong> : str</p>
+<blockquote>
+<div><p>Determines what principal minor of the Alexander matrix should be
+used in the calculation; all choices <em>should</em> give the same answer.
+Must be &#8216;lr&#8217;, &#8216;ur&#8217;, &#8216;ul&#8217; or &#8216;ll&#8217; for lower-right, upper-right,</p>
+</div></blockquote>
+<p><strong>verbose</strong> : bool</p>
+<blockquote>
+<div><p>Whether to print information about the procedure. Defaults to False.</p>
+</div></blockquote>
+<p><strong>simplify</strong> : bool</p>
+<blockquote class="last">
+<div><p>If True, tries to simplify the representation before calculating
+the polynomial. Defaults to True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.invariants.hyperbolic_volume">
+<tt class="descclassname">pyknot2.invariants.</tt><tt class="descname">hyperbolic_volume</tt><big>(</big><em>representation</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/invariants.html#hyperbolic_volume"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.invariants.hyperbolic_volume" title="Permalink to this definition">¶</a></dt>
+<dd><p>The hyperbolic volume, calculated by the SnapPy library for
+studying the topology and geometry of 3-manifolds. This function
+depends on the Spherogram module, distributed with SnapPy or
+available separately.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>representation</strong> : A PlanarDiagram, or anything convertible to a</p>
+<blockquote class="last">
+<div><blockquote>
+<div><p><a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a></p>
+</div></blockquote>
+<p>A pyknot2 representation class for the knot, or anything that
+can automatically be converted into a GaussCode (i.e. by writing
+<tt class="code docutils literal"><span class="pre">GaussCode(your_object)</span></tt>), or a PlanarDiagram.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.invariants.jones_mathematica">
+<tt class="descclassname">pyknot2.invariants.</tt><tt class="descname">jones_mathematica</tt><big>(</big><em>representation</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/invariants.html#jones_mathematica"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.invariants.jones_mathematica" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Jones polynomial of the given representation, by
+creating a Mathematica process and running its knot routines.
+The Mathematica installation must include the KnotTheory package.</p>
+<p>The function only supports evaluating at the variable <tt class="docutils literal"><span class="pre">q</span></tt>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>representation</strong> : A PlanarDiagram, or anything convertible to a</p>
+<blockquote class="last">
+<div><blockquote>
+<div><p><a class="reference internal" href="../apidoc_test/pyknot2.representations.html#pyknot2.representations.gausscode.GaussCode" title="pyknot2.representations.gausscode.GaussCode"><tt class="xref py py-class docutils literal"><span class="pre">GaussCode</span></tt></a></p>
+</div></blockquote>
+<p>A pyknot2 representation class for the knot, or anything that
+can automatically be converted into a GaussCode (i.e. by writing
+<tt class="code docutils literal"><span class="pre">GaussCode(your_object)</span></tt>), or a PlanarDiagram.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+          <footer>
+  
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+      
+        <a href="visualise.html" class="btn btn-neutral float-right" title="Visualise">Next <span class="fa fa-arrow-circle-right"></span></a>
+      
+      
+        <a href="representations/planardiagram.html" class="btn btn-neutral" title="Planar diagrams"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+      
+    </div>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

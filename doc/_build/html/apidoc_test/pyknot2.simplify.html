@@ -1,0 +1,456 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.simplify package &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../index.html">Docs</a> &raquo;</li>
+      
+    <li>pyknot2.simplify package</li>
+      <li class="wy-breadcrumbs-aside">
+        
+          <a href="../_sources/apidoc_test/pyknot2.simplify.txt" rel="nofollow"> View page source</a>
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <div class="section" id="pyknot2-simplify-package">
+<h1>pyknot2.simplify package<a class="headerlink" href="#pyknot2-simplify-package" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="submodules">
+<h2>Submodules<a class="headerlink" href="#submodules" title="Permalink to this headline">¶</a></h2>
+</div>
+<div class="section" id="module-pyknot2.simplify.octree">
+<span id="pyknot2-simplify-octree-module"></span><h2>pyknot2.simplify.octree module<a class="headerlink" href="#module-pyknot2.simplify.octree" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="octree-space-curve-simplification">
+<h3>Octree space curve simplification<a class="headerlink" href="#octree-space-curve-simplification" title="Permalink to this headline">¶</a></h3>
+<p>Module for simplifying lines with an octree decomposition.</p>
+<dl class="class">
+<dt id="pyknot2.simplify.octree.CellJumpSegment">
+<em class="property">class </em><tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">CellJumpSegment</tt><big>(</big><em>points</em>, <em>next=None</em>, <em>prev=None</em>, <em>identifier=None</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#CellJumpSegment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.CellJumpSegment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#pyknot2.simplify.octree.LineSegment" title="pyknot2.simplify.octree.LineSegment"><tt class="xref py py-class docutils literal"><span class="pre">pyknot2.simplify.octree.LineSegment</span></tt></a></p>
+<p>A special LineSegment that denotes a jump through periodic boundary
+conditions. This has no special behaviour of its own, but is
+subclassed in case this is useful later.</p>
+<p class="rubric">Methods</p>
+</dd></dl>
+
+<dl class="class">
+<dt id="pyknot2.simplify.octree.Handle">
+<em class="property">class </em><tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">Handle</tt><big>(</big><em>next=None</em>, <em>prev=None</em>, <em>identifier=None</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#Handle"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.Handle" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Simply stores a next and previous LineSegment, with a method to
+reconstruct the line by walking along the segments.</p>
+<p>The Handle is like a LineSegment with no point data - all it does is
+sit in the line keeping track of its next and prev segments (which
+may be modified by the cut_at method of those LineSegments). Since
+it will never change itself, it can be used later to rejoin all these
+LineSegments which may have been created arbitrarily deep in the
+decomposition, returning the same line that corresponds to its input!</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.simplify.octree.Handle.get_line_components">
+<tt class="descname">get_line_components</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#Handle.get_line_components"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.Handle.get_line_components" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of all the LineSegments in the line with
+this handle.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.Handle.reconstruct_line">
+<tt class="descname">reconstruct_line</tt><big>(</big><em>remove_unnecessary_jumps=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#Handle.reconstruct_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.Handle.reconstruct_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the line stored by the handle, by walking along it until
+returning to the Handle or reaching a segment with no next entry.</p>
+<p>If <tt class="docutils literal"><span class="pre">remove_unnecessary_jumps</span></tt> is True, will remove jumps connected
+by a trivial segment along the periodic cell wall.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyknot2.simplify.octree.LineSegment">
+<em class="property">class </em><tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">LineSegment</tt><big>(</big><em>points</em>, <em>next=None</em>, <em>prev=None</em>, <em>identifier=None</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#LineSegment"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.LineSegment" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Stores a section of line, and can split at boundaries.</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.simplify.octree.LineSegment.cell">
+<tt class="descname">cell</tt><big>(</big><em>cut_planes</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#LineSegment.cell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.LineSegment.cell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a string representing where the LineSegment is,
+in terms of which octant of the space divided by cut_planes
+x, y, z the LineSegment appears in.</p>
+<p>This assumes the LineSegment is only within one octant (except
+perhaps points on the boundary).</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.LineSegment.cut_at">
+<tt class="descname">cut_at</tt><big>(</big><em>cuts</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#LineSegment.cut_at"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.LineSegment.cut_at" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list of new LineSegments, resulting from cutting self at
+the given cut planes.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.LineSegment.replace_with_straight_line">
+<tt class="descname">replace_with_straight_line</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#LineSegment.replace_with_straight_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.LineSegment.replace_with_straight_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Replaces self.points with a straight line (i.e. just the first
+and last vertices).</p>
+<p>This is only called when only one segment lies in a quadcell,
+therefore components can be cut out safely without worrying
+about any other parts of the full curve.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="pyknot2.simplify.octree.OctreeCell">
+<em class="property">class </em><tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">OctreeCell</tt><big>(</big><em>lines</em>, <em>shape</em>, <em>depth=0</em>, <em>top_level=True</em>, <em>state=None</em>, <em>min_cell=1.0</em>, <em>max_depth=100</em>, <em>handles=None</em>, <em>cut_selection='regular'</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <tt class="xref py py-class docutils literal"><span class="pre">object</span></tt></p>
+<p>Stores line segments, and is capable of splitting and simplifying
+them.</p>
+<ul class="simple">
+<li>lines must be a list of LineSegments. If your data is in another form,
+consider using the from_line or from_cell_lines class methods.</li>
+<li>shape is the size of the cell</li>
+<li>depth is the current recursion depth</li>
+<li>state is a dictionary that stores information from the recursion tree</li>
+<li>min_cell is the minimum cell side length</li>
+<li>max_depth is the maximum recursion depth beyond which simplification is
+not attempted</li>
+<li>top_level should be True if this OctreeCell is the first created, in which
+case a LineHandle is instantiated for each segment so that it can be
+reconstructed after simplification.</li>
+<li>handles is a list of Handles to use, if it doesn&#8217;t exist and top_level
+is True then one is created per segment. This <em>will</em> fail with some
+input, so use the class methods for building the cell to automatically
+pass the right handles.</li>
+<li>cut_selection is a string saying how to select the cut planes in self.
+It may be &#8216;regular&#8217; (8 equally sized octants), &#8216;uniform&#8217; (values
+selected from a uniform distribution in each axis), or &#8216;com&#8217; (values
+selected to pass through the line centre of mass of the cell).</li>
+</ul>
+<p>The Handle system is used to ensure correct behaviour (with simple code!)
+even for non-continuous segments etc.</p>
+<p class="rubric">Methods</p>
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.boundary_lines">
+<tt class="descname">boundary_lines</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.boundary_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.boundary_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Get a line tracing the boundary of the cell. These lines
+are passed recursively up the OctreeCell tree so that the top level one
+keeps a list of all of them - useful for plotting the tree state
+later.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.simplify.octree.OctreeCell.from_cell_lines">
+<em class="property">classmethod </em><tt class="descname">from_cell_lines</tt><big>(</big><em>lines</em>, <em>shape</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.from_cell_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.from_cell_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an OctreeCell created from the given list of lines,
+which are assumed to be periodic.</p>
+<p>The shape may be all 6 values (xmin, xmax, ymin, ymax, zmin, zmax)
+or just xmax, ymax, zmax with the assumption that the minima are
+all zero.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.simplify.octree.OctreeCell.from_lines">
+<em class="property">classmethod </em><tt class="descname">from_lines</tt><big>(</big><em>lines</em>, <em>shape=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.from_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.from_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an OctreeCell created from the given lines, optionally
+with the given boundingbox shape. If the shape is not provided,
+it is calculated from the maximum line extents.</p>
+<p>Other kwargs are passed directly to the OctreeCell.</p>
+</dd></dl>
+
+<dl class="classmethod">
+<dt id="pyknot2.simplify.octree.OctreeCell.from_single_line">
+<em class="property">classmethod </em><tt class="descname">from_single_line</tt><big>(</big><em>line</em>, <em>shape=None</em>, <em>**kwargs</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.from_single_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.from_single_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns an OctreeCell created from the given line, optionally
+with the given boundingbox shape. If the shape is not provided,
+it is calculated from the line extents.</p>
+<p>Other kwargs are passed directly to the OctreeCell.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.get_cell_size">
+<tt class="descname">get_cell_size</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.get_cell_size"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.get_cell_size" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.get_equidistant_planes">
+<tt class="descname">get_equidistant_planes</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.get_equidistant_planes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.get_equidistant_planes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the x, y and z values halfway along each axis of the
+cell, according to self.shape.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.get_lines">
+<tt class="descname">get_lines</tt><big>(</big><em>remove_unnecessary_jumps=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.get_lines"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.get_lines" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return all the lines of self by joining any segments back
+together again.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.get_single_line">
+<tt class="descname">get_single_line</tt><big>(</big><em>remove_unnecessary_jumps=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.get_single_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.get_single_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return the first line in the set of lines reconstructed from
+segments in self. This is useful for OctreeCells that only had
+a single line to begin with, e.g. simplifying a knot.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.get_uniform_random_planes">
+<tt class="descname">get_uniform_random_planes</tt><big>(</big><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.get_uniform_random_planes"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.get_uniform_random_planes" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns x, y and z values each uniformly randomly distributed
+through self.shape.</p>
+</dd></dl>
+
+<dl class="method">
+<dt id="pyknot2.simplify.octree.OctreeCell.simplify">
+<tt class="descname">simplify</tt><big>(</big><em>obey_knotting=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#OctreeCell.simplify"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.OctreeCell.simplify" title="Permalink to this definition">¶</a></dt>
+<dd><p>Performs a suitable action depending on the segments in the cell:
+- if 1 segment, checks the total angle and reduces to a straight</p>
+<blockquote>
+<div>line if it is less than 3.8pi (4pi is needed for a knot)</div></blockquote>
+<ul class="simple">
+<li>otherwise, does the octant simplification if the cell min size
+and recursion depth have both not been hit</li>
+</ul>
+<p>The <cite>obey_knotting</cite> parameter may be False to ignore self-entangling
+of lines, i.e. a single line may just pass through itself so no
+angle check is necessary.</p>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.angle_between">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">angle_between</tt><big>(</big><em>v1</em>, <em>v2</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#angle_between"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.angle_between" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns angle between v1 and v2, assuming they are normalised to 1.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.angle_exceeds">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">angle_exceeds</tt><big>(</big><em>ps</em>, <em>val=6.283185307179586</em>, <em>include_closure=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#angle_exceeds"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.angle_exceeds" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the sum of angles along ps exceeds
+val, else False.</p>
+<p>If include_closure, includes the angles with the line closing
+the end and start points.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.angle_exceeds_func">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">angle_exceeds_func</tt><big>(</big><em>ps</em>, <em>val=6.283185307179586</em>, <em>include_closure=True</em><big>)</big><a class="headerlink" href="#pyknot2.simplify.octree.angle_exceeds_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns True if the sum of angles along ps exceeds
+val, else False.</p>
+<p>If include_closure, includes the angles with the line closing
+the end and start points.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.crude_segs_to_segs">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">crude_segs_to_segs</tt><big>(</big><em>csegs</em>, <em>identifier=None</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#crude_segs_to_segs"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.crude_segs_to_segs" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a list of line segments and makes them into LineSegment
+instances, under the assumption that the last is joined to the
+first. The segments are labelled by the passed identifier.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.find_octants_of_segments">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">find_octants_of_segments</tt><big>(</big><em>segments</em>, <em>cuts</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#find_octants_of_segments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.find_octants_of_segments" title="Permalink to this definition">¶</a></dt>
+<dd><p>For each LineSegment in the passed segments, returns an
+identifier for the octant it should be placed in</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.line_to_segments">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">line_to_segments</tt><big>(</big><em>line</em>, <em>cuts=None</em>, <em>join_ends=True</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#line_to_segments"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.line_to_segments" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a line (set of points), a list of cut planes in
+x, y, z, and a parameter to decide whether the line
+joining the first and last point should also be cut.</p>
+<p>Returns a list of shorter lines resulting from cutting at
+all these cut planes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.line_to_segments_func">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">line_to_segments_func</tt><big>(</big><em>line</em>, <em>cuts=None</em>, <em>join_ends=True</em><big>)</big><a class="headerlink" href="#pyknot2.simplify.octree.line_to_segments_func" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a line (set of points), a list of cut planes in
+x, y, z, and a parameter to decide whether the line
+joining the first and last point should also be cut.</p>
+<p>Returns a list of shorter lines resulting from cutting at
+all these cut planes.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.mag">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">mag</tt><big>(</big><em>v</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#mag"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.mag" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.remove_nearby_points">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">remove_nearby_points</tt><big>(</big><em>points</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#remove_nearby_points"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.remove_nearby_points" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a set of points, and removes those that are no distance from
+the previous one.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.resample">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">resample</tt><big>(</big><em>points</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#resample"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.resample" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a set of points, and cuts out the middle ones if they form
+part of a straight line, or if they are identical to the previous
+point.</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="pyknot2.simplify.octree.split_cell_line">
+<tt class="descclassname">pyknot2.simplify.octree.</tt><tt class="descname">split_cell_line</tt><big>(</big><em>line</em>, <em>shape=(10</em>, <em>10</em>, <em>10.0)</em><big>)</big><a class="reference internal" href="../_modules/pyknot2/simplify/octree.html#split_cell_line"><span class="viewcode-link">[source]</span></a><a class="headerlink" href="#pyknot2.simplify.octree.split_cell_line" title="Permalink to this definition">¶</a></dt>
+<dd><p>Takes a cell lines, and cuts at the periodic boundaries
+(in this represenation, this is where it jumps)</p>
+</dd></dl>
+
+</div>
+</div>
+<div class="section" id="module-pyknot2.simplify">
+<span id="module-contents"></span><h2>Module contents<a class="headerlink" href="#module-pyknot2.simplify" title="Permalink to this headline">¶</a></h2>
+</div>
+</div>
+
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../_static/jquery.js"></script>
+      <script type="text/javascript" src="../_static/underscore.js"></script>
+      <script type="text/javascript" src="../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

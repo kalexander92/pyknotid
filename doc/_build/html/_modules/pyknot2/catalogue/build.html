@@ -1,0 +1,330 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.catalogue.build &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.catalogue.build</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.catalogue.build</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;Functions for building a knot database from raw data</span>
+<span class="sd">files. Intended for use with the RDF format data from the knot</span>
+<span class="sd">atlas.&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">sympy</span> <span class="kn">as</span> <span class="nn">sym</span>
+<span class="kn">import</span> <span class="nn">rdflib</span>
+<span class="kn">from</span> <span class="nn">rdflib</span> <span class="kn">import</span> <span class="n">URIRef</span><span class="p">,</span> <span class="n">Graph</span>
+
+<span class="kn">import</span> <span class="nn">database</span> <span class="kn">as</span> <span class="nn">db</span>
+<span class="kn">from</span> <span class="nn">database</span> <span class="kn">import</span> <span class="n">Knot</span>
+<span class="kn">import</span> <span class="nn">converters</span>
+
+<span class="n">rdfalex</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Alexander_Polynomial&#39;</span><span class="p">)</span>
+<span class="n">rdfjones</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Jones_Polynomial&#39;</span><span class="p">)</span>
+<span class="n">rdfhomfly</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:HOMFLYPT_Polynomial&#39;</span><span class="p">)</span>
+
+<span class="n">rdfcross</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Crossings&#39;</span><span class="p">)</span>
+<span class="n">rdfdet</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Determinant&#39;</span><span class="p">)</span>
+<span class="n">rdfsig</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Signature&#39;</span><span class="p">)</span>
+
+<span class="n">rdfunknot</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Unknotting_Number&#39;</span><span class="p">)</span>
+<span class="n">rdfhyperbolic</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:HyperbolicVolume&#39;</span><span class="p">)</span>
+
+<span class="n">rdfgc</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:Gauss_Code&#39;</span><span class="p">)</span>
+<span class="n">rdfconway</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:ConwayNotation&#39;</span><span class="p">)</span>
+<span class="n">rdfpd</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:PD_Presentation&#39;</span><span class="p">)</span>
+<span class="n">rdfdtcode</span> <span class="o">=</span> <span class="n">URIRef</span><span class="p">(</span><span class="s">&#39;invariant:DT_Code&#39;</span><span class="p">)</span>
+
+<span class="c"># RDFLib arrangement is subject/predicate/object</span>
+
+<span class="n">db</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="c"># Try to create a Knot table in the database, just in case one doesn&#39;t</span>
+<span class="c"># exist. This might be a silly way to deal with things, but it&#39;ll do</span>
+<span class="c"># for now.</span>
+<span class="k">if</span> <span class="ow">not</span> <span class="n">db</span><span class="o">.</span><span class="n">Knot</span><span class="o">.</span><span class="n">table_exists</span><span class="p">():</span>
+    <span class="n">db</span><span class="o">.</span><span class="n">Knot</span><span class="o">.</span><span class="n">create_table</span><span class="p">()</span>
+
+
+<div class="viewcode-block" id="add_knots_from"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.build.add_knots_from">[docs]</a><span class="k">def</span> <span class="nf">add_knots_from</span><span class="p">(</span><span class="n">filen</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Read the RDF file at filen, and add all its knots to the database</span>
+<span class="sd">    specified in database.py.</span>
+
+<span class="sd">    The filen *must* be formatted in rdf nt format. This is the case</span>
+<span class="sd">    for knot atlas take home database files.</span>
+
+<span class="sd">    &#39;&#39;&#39;</span>
+    <span class="n">g</span> <span class="o">=</span> <span class="n">Graph</span><span class="p">()</span>
+    <span class="n">g</span><span class="o">.</span><span class="n">parse</span><span class="p">(</span><span class="n">filen</span><span class="p">,</span> <span class="n">format</span><span class="o">=</span><span class="s">&#39;nt&#39;</span><span class="p">)</span>
+
+    <span class="n">subjects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="nb">set</span><span class="p">(</span><span class="n">g</span><span class="o">.</span><span class="n">subjects</span><span class="p">(</span><span class="bp">None</span><span class="p">,</span> <span class="bp">None</span><span class="p">)))</span>
+    <span class="c"># Using the set removes duplicates</span>
+
+    <span class="n">knots</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="n">total</span> <span class="o">=</span> <span class="nb">len</span><span class="p">(</span><span class="n">subjects</span><span class="p">)</span>
+    <span class="n">i</span> <span class="o">=</span> <span class="mi">0</span>
+    <span class="k">for</span> <span class="n">subject</span> <span class="ow">in</span> <span class="n">subjects</span><span class="p">:</span>
+        <span class="n">i</span> <span class="o">+=</span> <span class="mi">1</span>
+        <span class="k">if</span> <span class="n">i</span> <span class="o">%</span> <span class="mi">10</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\r</span><span class="s">{}: knot {} of {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">filen</span><span class="p">,</span> <span class="n">i</span><span class="p">,</span> <span class="n">total</span><span class="p">))</span>
+            <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+        <span class="c"># Each subject is a knot</span>
+        <span class="n">identifier</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">subject</span><span class="o">.</span><span class="n">toPython</span><span class="p">()</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;:&#39;</span><span class="p">)[</span><span class="mi">1</span><span class="p">])</span>
+
+        <span class="n">alexander</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfalex</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">alexander</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">alexander</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">rdf_poly_to_sympy</span><span class="p">(</span><span class="n">alexander</span><span class="p">,</span> <span class="s">&#39;t&#39;</span><span class="p">)</span>
+            <span class="n">alexander</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">alexander_to_json</span><span class="p">(</span><span class="n">alexander</span><span class="p">)</span>
+
+        <span class="n">jones</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfjones</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">jones</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">jones</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">rdf_poly_to_sympy</span><span class="p">(</span><span class="n">jones</span><span class="p">,</span> <span class="s">&#39;q&#39;</span><span class="p">)</span>
+            <span class="n">jones</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">jones_to_json</span><span class="p">(</span><span class="n">jones</span><span class="p">)</span>
+
+        <span class="n">homfly</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfhomfly</span><span class="p">)</span>
+        <span class="c">#print &#39;homfly is&#39;, homfly</span>
+        <span class="k">if</span> <span class="n">homfly</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span> <span class="ow">and</span> <span class="s">&#39;Failed&#39;</span> <span class="ow">not</span> <span class="ow">in</span> <span class="n">homfly</span><span class="p">:</span>
+            <span class="n">homfly</span> <span class="o">=</span> <span class="n">homfly</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\\</span><span class="s">text{QuantumGroups$</span><span class="se">\\</span><span class="s">grave{ }$&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">homfly</span> <span class="o">=</span> <span class="n">homfly</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;a}&#39;</span><span class="p">,</span> <span class="s">&#39;a&#39;</span><span class="p">)</span>
+            <span class="n">homfly</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">rdf_poly_to_sympy</span><span class="p">(</span><span class="n">homfly</span><span class="p">,</span> <span class="p">[</span><span class="s">&#39;z&#39;</span><span class="p">,</span><span class="s">&#39;a&#39;</span><span class="p">])</span>
+            <span class="n">homfly</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">homfly_to_json</span><span class="p">(</span><span class="n">homfly</span><span class="p">)</span>
+
+        <span class="n">crossings</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfcross</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">crossings</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">crossings</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">crossings</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+        <span class="k">else</span><span class="p">:</span>
+            <span class="n">crossings</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">identifier</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&#39;_&#39;</span><span class="p">)[</span><span class="mi">0</span><span class="p">][</span><span class="mi">1</span><span class="p">:</span><span class="mi">3</span><span class="p">])</span>
+
+        <span class="n">determinant</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfdet</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">determinant</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">determinant</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">determinant</span><span class="p">)</span>
+
+        <span class="n">signature</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfsig</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">signature</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">signature</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">signature</span><span class="p">)</span>
+
+        <span class="n">unknot_number</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfunknot</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">unknot_number</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="k">if</span> <span class="s">&#39;math&#39;</span> <span class="ow">in</span> <span class="n">unknot_number</span><span class="p">:</span>
+                <span class="n">unknot_number</span> <span class="o">=</span> <span class="bp">None</span>
+            <span class="k">else</span><span class="p">:</span>
+                <span class="n">unknot_number</span> <span class="o">=</span> <span class="nb">int</span><span class="p">(</span><span class="n">unknot_number</span><span class="p">)</span>
+
+        <span class="n">hyp_vol</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfhyperbolic</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">hyp_vol</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">hyp_vol</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">hyp_vol</span><span class="p">)</span>
+
+        <span class="n">gauss_code</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfgc</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">gauss_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">gauss_code</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">gauss_code</span><span class="p">)</span>
+
+        <span class="n">conway</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfconway</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">conway</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">conway</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">conway</span><span class="p">)</span>
+            <span class="n">conway</span> <span class="o">=</span> <span class="n">conway</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;nowiki&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+            <span class="n">conway</span> <span class="o">=</span> <span class="n">conway</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;/nowiki&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">planar_diagram</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfpd</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">planar_diagram</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">planar_diagram</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">planar_diagram</span><span class="p">)</span>
+            <span class="n">planar_diagram</span> <span class="o">=</span> <span class="n">planar_diagram</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;sub&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;_&#39;</span><span class="p">)</span>
+            <span class="n">planar_diagram</span> <span class="o">=</span> <span class="n">planar_diagram</span><span class="o">.</span><span class="n">replace</span><span class="p">(</span><span class="s">&#39;&lt;/sub&gt;&#39;</span><span class="p">,</span> <span class="s">&#39;&#39;</span><span class="p">)</span>
+
+        <span class="n">dt_code</span> <span class="o">=</span> <span class="n">get_rdf_object</span><span class="p">(</span><span class="n">g</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">rdfdtcode</span><span class="p">)</span>
+        <span class="k">if</span> <span class="n">dt_code</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+            <span class="n">dt_code</span> <span class="o">=</span> <span class="nb">str</span><span class="p">(</span><span class="n">dt_code</span><span class="p">)</span>
+
+        <span class="n">k</span> <span class="o">=</span> <span class="n">Knot</span><span class="p">(</span><span class="n">identifier</span><span class="o">=</span><span class="n">identifier</span><span class="p">,</span>
+                 <span class="n">min_crossings</span><span class="o">=</span><span class="n">crossings</span><span class="p">,</span>
+                 <span class="n">determinant</span><span class="o">=</span><span class="n">determinant</span><span class="p">,</span>
+                 <span class="n">signature</span><span class="o">=</span><span class="n">signature</span><span class="p">,</span>
+                 <span class="n">alexander</span><span class="o">=</span><span class="n">alexander</span><span class="p">,</span>
+                 <span class="n">jones</span><span class="o">=</span><span class="n">jones</span><span class="p">,</span>
+                 <span class="n">homfly</span><span class="o">=</span><span class="n">homfly</span><span class="p">,</span>
+                 <span class="n">unknotting_number</span><span class="o">=</span><span class="n">unknot_number</span><span class="p">,</span>
+                 <span class="n">hyperbolic_volume</span><span class="o">=</span><span class="n">hyp_vol</span><span class="p">,</span>
+                 <span class="n">conway_notation</span><span class="o">=</span><span class="n">conway</span><span class="p">,</span>
+                 <span class="n">gauss_code</span><span class="o">=</span><span class="n">gauss_code</span><span class="p">,</span>
+                 <span class="n">planar_diagram</span><span class="o">=</span><span class="n">planar_diagram</span><span class="p">,</span>
+                 <span class="n">dt_code</span><span class="o">=</span><span class="n">dt_code</span>
+                 <span class="p">)</span>
+        <span class="n">knots</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">k</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">write</span><span class="p">(</span><span class="s">&#39;</span><span class="se">\n</span><span class="s">&#39;</span><span class="p">)</span>
+    <span class="n">sys</span><span class="o">.</span><span class="n">stdout</span><span class="o">.</span><span class="n">flush</span><span class="p">()</span>
+
+    <span class="k">print</span> <span class="s">&#39;Attempting to save in transaction...&#39;</span>
+    <span class="k">with</span> <span class="n">db</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">transaction</span><span class="p">():</span>
+        <span class="k">for</span> <span class="n">knot</span> <span class="ow">in</span> <span class="n">knots</span><span class="p">:</span>
+            <span class="n">knot</span><span class="o">.</span><span class="n">save</span><span class="p">()</span>
+    <span class="k">return</span> <span class="n">knots</span>
+
+</div>
+<div class="viewcode-block" id="get_rdf_object"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.build.get_rdf_object">[docs]</a><span class="k">def</span> <span class="nf">get_rdf_object</span><span class="p">(</span><span class="n">graph</span><span class="p">,</span> <span class="n">subject</span><span class="p">,</span> <span class="n">predicate</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes an rdflib Graph, subject and predicate, and returns the first</span>
+<span class="sd">    matching object if one exists. If none exist, returns None.&#39;&#39;&#39;</span>
+    <span class="n">objects</span> <span class="o">=</span> <span class="nb">list</span><span class="p">(</span><span class="n">graph</span><span class="o">.</span><span class="n">objects</span><span class="p">(</span><span class="n">subject</span><span class="p">,</span> <span class="n">predicate</span><span class="p">))</span>
+    <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">objects</span><span class="p">)</span> <span class="o">==</span> <span class="mi">0</span><span class="p">:</span>
+        <span class="k">return</span> <span class="bp">None</span>
+    <span class="k">else</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">objects</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span><span class="o">.</span><span class="n">toPython</span><span class="p">()</span>
+</div>
+<span class="k">if</span> <span class="n">__name__</span> <span class="o">==</span> <span class="s">&#39;__main__&#39;</span><span class="p">:</span>
+    <span class="kn">import</span> <span class="nn">sys</span>
+
+    <span class="n">filens</span> <span class="o">=</span> <span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">:]</span>
+    <span class="k">for</span> <span class="n">filen</span> <span class="ow">in</span> <span class="n">filens</span><span class="p">:</span>
+        <span class="k">print</span> <span class="s">&#39;Reading in from&#39;</span><span class="p">,</span> <span class="n">filen</span>
+        <span class="n">add_knots_from</span><span class="p">(</span><span class="n">filen</span><span class="p">)</span>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

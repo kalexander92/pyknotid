@@ -1,0 +1,276 @@
+
+
+<!DOCTYPE html>
+<!--[if IE 8]><html class="no-js lt-ie9" lang="en" > <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  
+  <title>pyknot2.catalogue.identify &mdash; pyknot2 0.1 documentation</title>
+  
+
+  
+  
+
+  
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700' rel='stylesheet' type='text/css'>
+
+  
+  
+    
+
+  
+
+  
+  
+    <link rel="stylesheet" href="../../../_static/css/theme.css" type="text/css" />
+  
+
+  
+    <link rel="top" title="pyknot2 0.1 documentation" href="../../../index.html"/>
+        <link rel="up" title="Module code" href="../../index.html"/> 
+
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
+
+</head>
+
+<body class="wy-body-for-nav" role="document">
+
+  <div class="wy-grid-for-nav">
+
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-nav-search">
+        
+          <a href="../../../index.html" class="fa fa-home"> pyknot2</a>
+        
+        <div role="search">
+  <form id ="rtd-search-form" class="wy-form" action="../../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+      </div>
+
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
+        
+            <ul>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/spacecurves/spacecurves.html">Space curves</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/gausscode.html">Gauss code</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/representations/planardiagram.html">Planar diagrams</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/invariants.html">Invariants</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/visualise.html">Visualise</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../../../api/catalogue/catalogue.html">Identify knots</a></li>
+</ul>
+
+        
+      </div>
+      &nbsp;
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" role="navigation" aria-label="top navigation">
+        <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+        <a href="../../../index.html">pyknot2</a>
+      </nav>
+
+
+      
+      <div class="wy-nav-content">
+        <div class="rst-content">
+          <div role="navigation" aria-label="breadcrumbs navigation">
+  <ul class="wy-breadcrumbs">
+    <li><a href="../../../index.html">Docs</a> &raquo;</li>
+      
+          <li><a href="../../index.html">Module code</a> &raquo;</li>
+      
+    <li>pyknot2.catalogue.identify</li>
+      <li class="wy-breadcrumbs-aside">
+        
+      </li>
+  </ul>
+  <hr/>
+</div>
+          <div role="main" class="document">
+            
+  <h1>Source code for pyknot2.catalogue.identify</h1><div class="highlight"><pre>
+<span class="sd">&#39;&#39;&#39;</span>
+<span class="sd">Identify knots</span>
+<span class="sd">==============</span>
+
+<span class="sd">Functions for identifying knots based on their polynomials.&#39;&#39;&#39;</span>
+
+<span class="kn">import</span> <span class="nn">database</span> <span class="kn">as</span> <span class="nn">db</span>
+<span class="kn">from</span> <span class="nn">database</span> <span class="kn">import</span> <span class="n">Knot</span>
+<span class="kn">import</span> <span class="nn">converters</span>
+
+<span class="n">db</span><span class="o">.</span><span class="n">db</span><span class="o">.</span><span class="n">connect</span><span class="p">()</span>
+
+<span class="n">root_to_attr</span> <span class="o">=</span> <span class="p">{</span><span class="mi">2</span><span class="p">:</span> <span class="n">Knot</span><span class="o">.</span><span class="n">determinant</span><span class="p">,</span>
+                  <span class="mi">3</span><span class="p">:</span> <span class="n">Knot</span><span class="o">.</span><span class="n">alexander_imag_3</span><span class="p">,</span>
+                  <span class="mi">4</span><span class="p">:</span> <span class="n">Knot</span><span class="o">.</span><span class="n">alexander_imag_4</span><span class="p">}</span>
+
+<div class="viewcode-block" id="from_invariants"><a class="viewcode-back" href="../../../apidoc_test/pyknot2.catalogue.html#pyknot2.catalogue.identify.from_invariants">[docs]</a><span class="k">def</span> <span class="nf">from_invariants</span><span class="p">(</span><span class="n">return_query</span><span class="o">=</span><span class="bp">False</span><span class="p">,</span> <span class="o">**</span><span class="n">kwargs</span><span class="p">):</span>
+    <span class="sd">&#39;&#39;&#39;Takes invariants as kwargs, and does the appropriate conversion to</span>
+<span class="sd">    return a list of database objects matching all the given criteria.</span>
+
+<span class="sd">    Does *not* support all available invariants. Currently, searching</span>
+<span class="sd">    is supported by:</span>
+
+<span class="sd">    Parameters</span>
+<span class="sd">    ----------</span>
+<span class="sd">    identifier : str</span>
+<span class="sd">        The name of the knot following knot atlas conventions, e.g. &#39;3_1&#39;</span>
+<span class="sd">    min_crossings : int</span>
+<span class="sd">        The minimal crossing number of the knot.</span>
+<span class="sd">    signature : int</span>
+<span class="sd">        The signature invariant.</span>
+<span class="sd">    unknotting_number : int</span>
+<span class="sd">        The unknotting number of the knot.</span>
+<span class="sd">    alexander or alex : sympy</span>
+<span class="sd">        The Alexander polynomial, provided as a sympy expression in a</span>
+<span class="sd">        single variable (ideally &#39;t&#39;).</span>
+<span class="sd">    determinant or alexander_imag_2: int</span>
+<span class="sd">        The Alexander polynomial at -1 (== exp(Pi I))</span>
+<span class="sd">    alexander_imag_3 : int</span>
+<span class="sd">        The abs of the Alexander polynomial at exp(2 Pi I / 3)</span>
+<span class="sd">    alexander_imag_4 : int</span>
+<span class="sd">        The abs of the Alexander polynomial at exp(Pi I / 2)</span>
+<span class="sd">    roots : iterable</span>
+<span class="sd">        The abs of the Alexander polnomial at the given roots, assumed</span>
+<span class="sd">        to start at 2, e.g. passing (3, 2, 1) is the same as identifying</span>
+<span class="sd">        at determinant=3, alexander_imag_3=2, alexander_imag_4=1. An</span>
+<span class="sd">        entry of None means the value is ignored in the lookup.</span>
+<span class="sd">    jones : sympy</span>
+<span class="sd">        The Jones polynomial, provided as a sympy expression in a single</span>
+<span class="sd">        variable (ideally &#39;q&#39;).</span>
+<span class="sd">    homfly : sympy</span>
+<span class="sd">        The HOMFLY-PT polynomial, provided as a sympy expression in two</span>
+<span class="sd">        variables.</span>
+<span class="sd">    hyperbolic_volume or hyp_vol or hypvol : float or str</span>
+<span class="sd">        The hyperbolic volume of the knot complement. The lookup is a</span>
+<span class="sd">        string comparison based on the given number of significant digits.</span>
+<span class="sd">    other : iterable</span>
+<span class="sd">        A list of other peewee terms that can be chained in ``where()``</span>
+<span class="sd">        calls, e.g. ``database.Knot.min_crossings &lt; 5``. This provides</span>
+<span class="sd">        more flexibility than the other options.</span>
+<span class="sd">    return_query : bool</span>
+<span class="sd">        If True, returns the database iterator for the objects, otherwise</span>
+<span class="sd">        returns a list. Defaults to False (i.e. the list). This will</span>
+<span class="sd">        be much slower if the list is very large, but is convenient</span>
+<span class="sd">        for most searches.</span>
+<span class="sd">    &#39;&#39;&#39;</span>
+
+    <span class="n">return_query</span> <span class="o">=</span> <span class="bp">False</span>
+    <span class="n">conditions</span> <span class="o">=</span> <span class="p">[]</span>
+    <span class="k">for</span> <span class="n">invariant</span><span class="p">,</span> <span class="n">value</span> <span class="ow">in</span> <span class="n">kwargs</span><span class="o">.</span><span class="n">items</span><span class="p">():</span>
+        <span class="n">invariant</span> <span class="o">=</span> <span class="n">invariant</span><span class="o">.</span><span class="n">lower</span><span class="p">()</span>
+        <span class="k">if</span> <span class="n">invariant</span> <span class="o">==</span> <span class="s">&#39;identifier&#39;</span><span class="p">:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">identifier</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="o">==</span> <span class="s">&#39;min_crossings&#39;</span><span class="p">:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">min_crossings</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="o">==</span> <span class="s">&#39;signature&#39;</span><span class="p">:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">signature</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;determinant&#39;</span><span class="p">,</span> <span class="s">&#39;alexander_imag_2&#39;</span><span class="p">,</span>
+                           <span class="s">&#39;alex_imag_2&#39;</span><span class="p">,</span> <span class="s">&#39;weak_2&#39;</span><span class="p">]:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">determinant</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;alexander_imag_3&#39;</span><span class="p">,</span> <span class="s">&#39;alex_imag_3&#39;</span><span class="p">,</span> <span class="s">&#39;weak_3&#39;</span><span class="p">]:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">alexander_imag_3</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;alexander_imag_4&#39;</span><span class="p">,</span> <span class="s">&#39;alex_imag_4&#39;</span><span class="p">,</span> <span class="s">&#39;weak_4&#39;</span><span class="p">]:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">alexander_imag_4</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;roots&#39;</span><span class="p">]:</span>
+            <span class="k">for</span> <span class="n">root</span><span class="p">,</span> <span class="n">result</span> <span class="ow">in</span> <span class="nb">zip</span><span class="p">(</span><span class="nb">range</span><span class="p">(</span><span class="mi">2</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">value</span><span class="p">)</span><span class="o">+</span><span class="mi">2</span><span class="p">),</span> <span class="n">value</span><span class="p">):</span>
+                <span class="k">if</span> <span class="n">result</span> <span class="ow">is</span> <span class="ow">not</span> <span class="bp">None</span><span class="p">:</span>
+                    <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">root_to_attr</span><span class="p">[</span><span class="n">root</span><span class="p">]</span> <span class="o">==</span> <span class="n">result</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="o">==</span> <span class="s">&#39;unknotting_number&#39;</span><span class="p">:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">unknotting_number</span> <span class="o">==</span> <span class="n">value</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;alexander&#39;</span><span class="p">,</span> <span class="s">&#39;alex&#39;</span><span class="p">]:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">py2db_alexander</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">alexander</span> <span class="o">==</span> <span class="n">val</span><span class="p">)</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="o">==</span> <span class="s">&#39;jones&#39;</span><span class="p">:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">py2db_jones</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">chiral_val</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">py2db_jones</span><span class="p">(</span>
+                <span class="n">converters</span><span class="o">.</span><span class="n">jones_other_chirality</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">jones</span> <span class="o">&lt;&lt;</span> <span class="p">[</span><span class="n">val</span><span class="p">,</span> <span class="n">chiral_val</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;homfly&#39;</span><span class="p">,</span> <span class="p">]:</span>
+            <span class="n">val</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">py2db_homfly</span><span class="p">(</span><span class="n">value</span><span class="p">)</span>
+            <span class="n">chiral_val</span> <span class="o">=</span> <span class="n">converters</span><span class="o">.</span><span class="n">py2db_homfly</span><span class="p">(</span>
+                <span class="n">converters</span><span class="o">.</span><span class="n">homfly_other_chirality</span><span class="p">(</span><span class="n">value</span><span class="p">))</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">homfly</span> <span class="o">&lt;&lt;</span> <span class="p">[</span><span class="n">val</span><span class="p">,</span> <span class="n">chiral_val</span><span class="p">])</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="ow">in</span> <span class="p">[</span><span class="s">&#39;hypvol&#39;</span><span class="p">,</span> <span class="s">&#39;hyp_vol&#39;</span><span class="p">,</span> <span class="s">&#39;hyperbolic_volume&#39;</span><span class="p">]:</span>
+            <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">Knot</span><span class="o">.</span><span class="n">hyperbolic_volume</span> <span class="o">%</span> <span class="s">&#39;{}*&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">str</span><span class="p">(</span><span class="n">value</span><span class="p">)))</span>
+        <span class="k">elif</span> <span class="n">invariant</span> <span class="o">==</span> <span class="s">&#39;other&#39;</span><span class="p">:</span>
+            <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">value</span><span class="p">:</span>
+                <span class="n">conditions</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+
+    <span class="n">selection</span> <span class="o">=</span> <span class="n">Knot</span><span class="o">.</span><span class="n">select</span><span class="p">()</span>
+    <span class="k">for</span> <span class="n">condition</span> <span class="ow">in</span> <span class="n">conditions</span><span class="p">:</span>
+        <span class="n">selection</span> <span class="o">=</span> <span class="n">selection</span><span class="o">.</span><span class="n">where</span><span class="p">(</span><span class="n">condition</span><span class="p">)</span>
+    <span class="k">if</span> <span class="n">return_query</span><span class="p">:</span>
+        <span class="k">return</span> <span class="n">selection</span>
+    <span class="k">return</span> <span class="nb">list</span><span class="p">(</span><span class="n">selection</span><span class="p">)</span></div>
+</pre></div>
+
+          </div>
+          <footer>
+  
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &copy; Copyright 2014, Alexander Taylor.
+    </p>
+  </div>
+
+  <a href="https://github.com/snide/sphinx_rtd_theme">Sphinx theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+
+  
+
+    <script type="text/javascript">
+        var DOCUMENTATION_OPTIONS = {
+            URL_ROOT:'../../../',
+            VERSION:'0.1',
+            COLLAPSE_INDEX:false,
+            FILE_SUFFIX:'.html',
+            HAS_SOURCE:  true
+        };
+    </script>
+      <script type="text/javascript" src="../../../_static/jquery.js"></script>
+      <script type="text/javascript" src="../../../_static/underscore.js"></script>
+      <script type="text/javascript" src="../../../_static/doctools.js"></script>
+      <script type="text/javascript" src="http://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
+
+  
+
+  
+  
+    <script type="text/javascript" src="../../../_static/js/theme.js"></script>
+  
+
+  
+  
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.StickyNav.enable();
+      });
+  </script>
+   
+
+</body>
+</html>

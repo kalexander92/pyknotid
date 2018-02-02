@@ -1,7 +1,6 @@
 '''Functions for converting between representations, e.g. from sympy
 polynomials to the json lists stored in the database models.  '''
 
-import sympy as sym
 import numpy as n    
 import json
 
@@ -10,6 +9,7 @@ import json
 def sympify_alexander(coeffs):
     '''Takes an Alexander polynomial as a list of coefficients, and
     returns a sympy polynomial representation.'''
+    import sympy as sym
     t = sym.var('t')
     index = 0
     result = 0
@@ -21,6 +21,7 @@ def sympify_alexander(coeffs):
 def sympify_jones(coeffs):
     '''Takes a Jones polynomial as a list of (coefficient, index) tuples,
     and returns a sympy polynomial representation.'''
+    import sympy as sym
     q = sym.var('q')
     result = 0
     for coeff, index in coeffs:
@@ -31,6 +32,7 @@ def sympify_homfly(coeffs):
     '''Takes a HOMFLY polynomial as a list of (coefficient, a_index,
     z_index) tuples, and returns a sympy polynomial representation.
     '''
+    import sympy as sym
     a = sym.var('a')
     z = sym.var('z')
     result = 0
@@ -170,6 +172,7 @@ def rdf_poly_to_sympy(p, vars=None):
     sure* that your rdf doesn't contain malicious code!
 
     '''
+    import sympy as sym
     p = p.strip()
     p = p.replace('<math>', '')
     p = p.replace('</math>', '')
@@ -216,6 +219,7 @@ def py2db_homfly(p):
 def homfly_to_jones(p):
     '''Takes a homfly polynomial p, and returns the Jones polynomial
     through variable substitution.'''
+    import sympy as sym
     a = sym.var('a')
     z = sym.var('z')
     q = sym.var('q')
@@ -228,6 +232,7 @@ def homfly_to_jones(p):
 def homfly_other_chirality(p):
     '''Takes a homfly polynomial p, and replaces a with 1/a to give the
     polynomial of the same knot with opposite chirality.'''
+    import sympy as sym
     if p == 1:
         return 1
     a = sym.var('a')
@@ -238,6 +243,7 @@ def homfly_other_chirality(p):
 def jones_other_chirality(p):
     '''Takes a jones polynomial p, and replaces q with 1/q to give the
     polynomial of the same knot with opposite chirality.'''
+    import sympy as sym
     if p == 1:
         return 1
     q = sym.var('q')

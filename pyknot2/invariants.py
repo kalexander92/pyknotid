@@ -15,7 +15,6 @@ or have other problems if Mathematica isn't available in your
 from __future__ import print_function
 import subprocess
 import re
-import sympy as sym
 import numpy as n
 
 from pyknot2.utils import vprint
@@ -50,7 +49,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
         can automatically be converted into a GaussCode (i.e. by writing
         :code:`GaussCode(your_object)`).
     variable : float or complex or sympy variable
-        The value to caltulate the Alexander polynomial at. Defaults to -1,
+        The value to calculate the Alexander polynomial at. Defaults to -1,
         but may be switched to the sympy variable ``t`` in the future.
         Supports int/float/complex types (fast, works for thousands of
         crossings) or sympy
@@ -106,7 +105,7 @@ def alexander(representation, variable=-1, quadrant='lr', simplify=True,
     elif mode == 'mathematica':
         return alexander_mathematica(representation, quadrant,
                                      verbose=False)
-                                     
+
 
     if isinstance(variable, (int, float, complex)):
         return _alexander_numpy(crossings, variable, quadrant)
@@ -333,7 +332,7 @@ def alexander_cypari(representation, quadrant='ul', verbose=False,
     return mat_mat.matdet()
 
 
-                    
+
 def alexander_mathematica(representation, quadrant='ul', verbose=False,
                           via_file=True):
     '''
@@ -386,7 +385,7 @@ def alexander_mathematica(representation, quadrant='ul', verbose=False,
         _write_mathematica_script('mathematicascript.m', 'Print[Det[' +
                                   mat_mat + ']]')
         det = subprocess.check_output(['bash', 'mathematicascript.m'])
-    t = sym.var('t')
+    #t = sym.var('t')
     return eval(det.replace('^', '**'))
 
 
@@ -418,7 +417,7 @@ def jones_mathematica(representation):
                               '<< KnotTheory`\nPrint[Jones[' +
                               mathematica_code + '][q]]')
     result = subprocess.check_output(['bash', 'jonesscript.m']).split('\n')[-2]
-    q = sym.var('q')
+    #q = sym.var('q')
     result = result.replace('[', '(')
     result = result.replace(']', ')')
     result = result.replace('Sqrt', 'sym.sqrt')
@@ -740,7 +739,7 @@ def _cypari_matrix(cs, quadrant='lr', verbose=False):
         print
 
     print('Warning: quadrant ignored!')
-    
+
     outstrs = ['[']
     num_crossings = int(len(cs) / 2)
     for row in range(num_crossings-1):
@@ -833,7 +832,7 @@ def vassiliev_degree_2(representation):
     gc = gc[0]
     arrows, signs = _crossing_arrows_and_signs(
         gc, representation.crossing_numbers)
-    
+
     crossing_numbers = list(representation.crossing_numbers)
     representations_sum = 0
     for index, i1 in enumerate(crossing_numbers):
@@ -874,7 +873,7 @@ def vassiliev_degree_3(representation, try_cython=True):
         return _vassiliev_degree_3_numpy(representation)
     return _vassiliev_degree_3_python(representation)
 
-        
+
 def _vassiliev_degree_3_python(representation):
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
@@ -891,7 +890,7 @@ def _vassiliev_degree_3_python(representation):
     gc = gc[0]
     arrows, signs = _crossing_arrows_and_signs(
         gc, representation.crossing_numbers)
-    
+
     crossing_numbers = list(representation.crossing_numbers)
     used_sets = set()
     representations_sum_1 = 0
@@ -928,11 +927,9 @@ def _vassiliev_degree_3_python(representation):
                                               signs[i3])
                     used_sets.add(ordered_indices)
 
-    print 
-    
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
-    
+
 def _vassiliev_degree_3_numpy(representation):
     ## See Polyak and Viro
     from pyknot2.representations.gausscode import GaussCode
@@ -958,7 +955,7 @@ def _vassiliev_degree_3_numpy(representation):
         return int(round(cinvariants.vassiliev_degree_3(arrows)))
 
     num_crossings = len(arrows) * 2
-    
+
     used_sets = set()
     representations_sum_1 = 0
     representations_sum_2 = 0
@@ -993,9 +990,6 @@ def _vassiliev_degree_3_numpy(representation):
                     representations_sum_2 += sign1 * sign2 * sign3
                     used_sets.add(ordered_indices)
 
-    print
-                    
-    
     return int(round(representations_sum_1 / 2.)) + representations_sum_2
 
 
@@ -1016,18 +1010,130 @@ def self_linking(representation):
     if len(representation._gauss_code[0]) == 0:
         return 0
     gauss_code = representation._gauss_code
-    l = len(gauss_code[0][:,0])
-    total_crossings = l/2
-    crossing_counter = 1
-    slink_counter = 0        
+    slink_counter = 0
 
     for crossing_number in representation.crossing_numbers:
         occurences = n.where(gauss_code[0][:, 0] == crossing_number)[0]
         first_occurence = occurences[0]
         second_occurence = occurences[1]
-        crossing_difference = second_occurence - first_occurence        
+        crossing_difference = second_occurence - first_occurence
 
         if(crossing_difference % 2 == 0):
-            slink_counter += 2 * gauss_code[0][occurences[0],2]
+            slink_counter += gauss_code[0][occurences[0],2]
 
-    return slink_counter   
+    return slink_counter
+
+def generalised_alexander(representation, root_s=3, root_t=4, round=True, symbolic=False):
+    '''
+    Docstring goes here
+    '''
+    from pyknot2.representations.gausscode import GaussCode
+    if not isinstance(representation, GaussCode):
+        representation = GaussCode(representation)
+
+    if len(representation) == 0:
+        return 0
+    if len(representation._gauss_code[0]) == 0:
+        return 0
+    gauss_code = representation
+
+    gauss_code_crossings = gauss_code._gauss_code[0][:, 0]
+    gauss_code_over_under = gauss_code._gauss_code[0][:, 1]
+    gauss_code_orientations = gauss_code._gauss_code[0][:, 2]
+    seen = set()
+    seen_add = seen.add
+    gauss_code_crossing_numbers = [a for a in gauss_code_crossings if not (a in seen or seen_add(a))]
+
+    num_crossings = len(gauss_code)
+
+    if symbolic:
+        import sympy as sym
+        x = sym.var('x')
+        y = sym.var('y')
+        matrix = sym.zeros(2 * num_crossings, 2 * num_crossings)
+        permutation_matrix = sym.zeros(2 * num_crossings, 2 * num_crossings)
+    else:
+        root_unity_s = n.exp(2 * n.pi * 1.j / root_s)
+        root_unity_s = root_unity_s.real.round(3) + root_unity_s.imag.round(3)*1.j
+        root_unity_t = n.exp(2 * n.pi * 1.j / root_t)
+        root_unity_t = root_unity_t.real.round(3) + root_unity_t.imag.round(3)*1.j
+        s = root_unity_s
+        t = root_unity_t
+        x = s*t
+        y = -t
+        matrix = n.zeros((2 * num_crossings, 2 * num_crossings)) + 0.j
+        permutation_matrix = n.zeros((2 * num_crossings, 2 * num_crossings)) + 0.j
+
+    m_plus = n.matrix([[1 - x, -y], [-x * y**-1., 0]])
+    m_minus = n.matrix([[0, -x**-1. * y], [-y**-1., 1 - x**-1.]])
+
+    arc_labels = [0]*len(gauss_code_crossings)
+    for i in range(len(gauss_code_crossings)):
+        arc_labels[i] = [0] * 4
+
+    counter = 0
+    for crossing_number in gauss_code_crossing_numbers:
+        occurrences = n.where(gauss_code_crossings == crossing_number)[0]
+        if gauss_code_orientations[occurrences[0]] == 1:
+            m = m_plus
+        else:
+            m = m_minus
+        for i in [0, 1]:
+            for j in [0, 1]:
+                matrix[counter*2 + i, counter*2 + j] = m[i, j]
+        counter += 1
+
+    for i in range(len(gauss_code_crossings)):
+        arc_labels[i][0] = gauss_code_crossings[i]
+        arc_labels[i][1] = (gauss_code_orientations[i] *
+                            gauss_code_over_under[i])  # -1 = r, +1 = l
+        arc_labels[i-1][2] = gauss_code_crossings[i]
+        arc_labels[i-1][3] = (-1 * gauss_code_orientations[i] *
+                              gauss_code_over_under[i])  # -1 = r, +1 = l
+
+    counter = 1
+    for crossing_number in gauss_code_crossing_numbers:
+        for i in range(len(gauss_code_crossings)):
+            if arc_labels[i][0] == crossing_number:
+                arc_labels[i][0] = counter
+            if arc_labels[i][2] == crossing_number:
+                arc_labels[i][2] = counter
+        counter += 1
+
+    for i in range(len(arc_labels)):
+        if arc_labels[i][1] < 0:
+            if arc_labels[i][3] < 0:
+                # bottom right
+                permutation_matrix[arc_labels[i][2]*2-1, arc_labels[i][0]*2-1] = 1
+            else:
+                # bottom left
+                permutation_matrix[arc_labels[i][2]*2-2, arc_labels[i][0]*2-1] = 1
+        else:
+            if arc_labels[i][3] < 0:
+                # upper right
+                permutation_matrix[arc_labels[i][2]*2-1, arc_labels[i][0]*2-2] = 1
+            else:
+                # upper left
+                permutation_matrix[arc_labels[i][2]*2-2, arc_labels[i][0]*2-2] = 1
+
+    writhe = sum(gauss_code_orientations)/2
+
+    if symbolic:
+        return (-1.)**writhe * ((matrix - permutation_matrix).det())
+    else:
+        value = n.linalg.det(int((-1.)**writhe) * (matrix - permutation_matrix))
+        if round:
+            return int(n.round(n.abs(value)))
+        else:
+            return n.abs(value)
+
+def jones_polynomial(representation, root=-1):
+        '''
+        Calculates the jones polynomial for a single projection of the open curve
+        using the given root
+        '''
+        import pyknot2.representations.planardiagram as pdiag
+        gc = representation
+        diagram = pdiag.PlanarDiagram(gc)
+        return diagram.jones_optimised(root_of_unity=root)
+
